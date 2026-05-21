@@ -7,14 +7,59 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
-//  SUPABASE CONFIG — MaïeutiCap Qualité Platform
+//  SUPABASE REST API — MaïeutiCap Qualité Platform
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://abscfkyufrqhfpccibcm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_w6_XpLuL-psvXmoZiWK-pQ_aXpipRUr';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const _hdrs = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+const db = {
+  from: (table) => ({
+    select: (cols='*') => ({
+      order: (col, opts={}) => fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?select=${cols}&order=${col}${opts.ascending===false?'.desc':'.asc'}`,
+        {headers:_hdrs}
+      ).then(r=>r.json()).then(data=>{return{data,error:null}}).catch(error=>{return{data:null,error}}),
+      eq: (col,val) => fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?select=${cols}&${col}=eq.${val}`,
+        {headers:_hdrs}
+      ).then(r=>r.json()).then(data=>{return{data,error:null}}).catch(error=>{return{data:null,error}})
+    }),
+    insert: (data) => ({
+      select: () => ({
+        single: () => fetch(
+          `${SUPABASE_URL}/rest/v1/${table}`,
+          {method:'POST',headers:_hdrs,body:JSON.stringify(data)}
+        ).then(r=>r.json()).then(d=>{const row=Array.isArray(d)?d[0]:d;return{data:row,error:row?.code?row:null}}).catch(error=>{return{data:null,error}})
+      })
+    }),
+    update: (data) => ({
+      eq: (col,val) => fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${val}`,
+        {method:'PATCH',headers:_hdrs,body:JSON.stringify(data)}
+      ).then(r=>r.ok?{data:null,error:null}:r.json().then(e=>{return{data:null,error:e}})).catch(error=>{return{data:null,error}})
+    }),
+    delete: () => ({
+      eq: (col,val) => fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${val}`,
+        {method:'DELETE',headers:_hdrs}
+      ).then(r=>{return{data:null,error:r.ok?null:r.status}}).catch(error=>{return{data:null,error}})
+    }),
+    upsert: (data, opts={}) => fetch(
+      `${SUPABASE_URL}/rest/v1/${table}${opts.onConflict?'?on_conflict='+opts.onConflict:''}`,
+      {method:'POST',headers:{..._hdrs,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(data)}
+    ).then(r=>r.json()).then(d=>{return{data:d,error:null}}).catch(error=>{return{data:null,error}})
+  })
+};
+console.log('✓ MaïeutiCap — Supabase REST API connecté');
 </script>
 
 <style>
@@ -778,12 +823,12 @@ async function loadFromSupabase(){
   showLoading(true);
   try{
     const [b,s,r,i,a,q] = await Promise.all([
-      db.from('benefs').select('*').order('id'),
-      db.from('satisfaction').select('*').order('id'),
-      db.from('reclamations').select('*').order('id'),
-      db.from('incidents').select('*').order('id'),
-      db.from('actions').select('*').order('id'),
-      db.from('qualiopi_statuts').select('*'),
+      fetch(`${SUPABASE_URL}/rest/v1/benefs?select=*&order=id.asc`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
+      fetch(`${SUPABASE_URL}/rest/v1/satisfaction?select=*&order=id.asc`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
+      fetch(`${SUPABASE_URL}/rest/v1/reclamations?select=*&order=id.asc`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
+      fetch(`${SUPABASE_URL}/rest/v1/incidents?select=*&order=id.asc`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
+      fetch(`${SUPABASE_URL}/rest/v1/actions?select=*&order=id.asc`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
+      fetch(`${SUPABASE_URL}/rest/v1/qualiopi_statuts?select=*`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
     ]);
     state.benefs = (b.data||[]).map(mapBenef);
     state.sat = s.data||[];
