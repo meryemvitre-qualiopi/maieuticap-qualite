@@ -1415,10 +1415,12 @@ function toggleCatDoc(el){
 }
 
 function dlDoc(filename){
-  const modal=document.getElementById('modalDocOpen');
-  const nameEl=document.getElementById('docOpenName');
-  if(nameEl) nameEl.textContent=filename;
-  if(modal) modal.classList.add('show');
+  const a=document.createElement('a');
+  a.href='/'+filename;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function copyDocName(){
