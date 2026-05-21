@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MaïeutiCap — Pilotage Qualité Qualiopi</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SUPABASE CONFIG — MaïeutiCap Qualité Platform
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://abscfkyufrqhfpccibcm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w6_XpLuL-psvXmoZiWK-pQ_aXpipRUr';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
+
+<style>
+:root{
+  --navy:#232E4F;--blue:#18478D;--steel:#799BA5;
+  --gold:#D9A843;--purple:#515276;--light:#F6F5F2;
+  --white:#fff;--red:#DC2626;--green:#16A34A;--orange:#D97706;
+  --border:rgba(0,0,0,0.08);--text:#1E293B;--muted:#64748B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat','Segoe UI',system-ui,sans-serif;font-size:13px;background:var(--light);color:var(--text)}
+
+/* ── HEADER ── */
+.header{background:var(--navy);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.logo-main{display:flex;flex-direction:column}
+.logo-name{font-size:22px;font-weight:800;color:white;letter-spacing:-0.5px}
+.logo-name span{color:var(--gold)}
+.logo-tag{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--steel);margin-top:1px}
+.logo-meta{font-size:10px;color:rgba(255,255,255,0.45);margin-top:5px}
+.header-badges{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.qualiopi-pill{background:rgba(217,168,67,0.15);border:1px solid var(--gold);border-radius:8px;padding:8px 14px;text-align:center}
+.qp-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.qp-date{font-size:11px;color:rgba(255,255,255,0.8);font-weight:600;margin-top:2px}
+.countdown-pill{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 16px;text-align:center;min-width:100px}
+.cp-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel)}
+.cp-days{font-size:30px;font-weight:800;color:var(--gold);line-height:1}
+.cp-sub{font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px}
+
+/* ── ALERT STRIP ── */
+.alert-strip{display:flex;gap:6px;padding:8px 24px;background:white;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.alert-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.chip-urgent{background:#FEE2E2;color:#991B1B}.chip-warn{background:#FEF3C7;color:#92400E}
+.chip-info{background:#EFF6FF;color:#1E40AF}.chip-ok{background:#D1FAE5;color:#065F46}
+
+/* ── TABS ── */
+.tab-nav{display:flex;background:white;border-bottom:2px solid var(--navy);padding:0 24px;gap:2px;overflow-x:auto;flex-shrink:0}
+.tab-btn{flex-shrink:0;padding:10px 13px;font-size:11px;font-weight:700;color:#94A3B8;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;font-family:inherit;white-space:nowrap;letter-spacing:0.3px;text-transform:uppercase}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--gold)}
+.tab-btn:hover:not(.active){color:var(--navy)}
+
+/* ── CONTENT ── */
+.tab-pane{display:none;padding:20px 24px;min-height:400px}
+.tab-pane.active{display:block}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:white;border-radius:10px;padding:14px;border-left:4px solid var(--gold);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.kpi.blue{border-left-color:var(--blue)}.kpi.green{border-left-color:var(--green)}
+.kpi.red{border-left-color:var(--red)}.kpi.purple{border-left-color:var(--purple)}
+.kpi.steel{border-left-color:var(--steel)}
+.kpi-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.kpi-val{font-size:28px;font-weight:800;color:var(--navy);line-height:1.1;margin:3px 0}
+.kpi-sub{font-size:10px;color:var(--muted)}
+
+/* ── CARDS ── */
+.card{background:white;border-radius:10px;border:0.5px solid var(--border);margin-bottom:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(35,46,79,0.03)}
+.card-head-title{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px}
+.card-body{padding:14px 16px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+
+/* ── QUALIOPI ACCORDION ── */
+.crit-list{display:flex;flex-direction:column;gap:6px}
+.crit-item{background:white;border-radius:8px;border:0.5px solid var(--border);overflow:hidden}
+.crit-header{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.crit-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0}
+.crit-title-wrap{flex:1}
+.crit-title{font-size:12px;font-weight:700;color:var(--navy)}
+.crit-subtitle{font-size:10px;color:var(--muted);margin-top:1px}
+.crit-meta{display:flex;align-items:center;gap:10px}
+.crit-pct{font-size:12px;font-weight:700;color:var(--navy)}
+.mini-bar{width:70px;height:5px;background:#E2E8F0;border-radius:3px;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.crit-chevron{font-size:14px;color:#94A3B8;transition:transform .2s}
+.crit-item.open .crit-chevron{transform:rotate(180deg)}
+.indic-list{border-top:1px solid var(--border);display:none}
+.crit-item.open .indic-list{display:block}
+.indic-row{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-bottom:0.5px solid rgba(0,0,0,0.04)}
+.indic-row:last-child{border-bottom:none}
+.indic-id{font-size:10px;font-weight:700;color:var(--steel);min-width:28px;padding-top:2px}
+.indic-body{flex:1}
+.indic-label{font-size:12px;color:#374151;line-height:1.4}
+.indic-preuves{font-size:10px;color:#9CA3AF;margin-top:3px}
+.indic-actions{flex-shrink:0;display:flex;align-items:center;gap:6px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.badge-ok{background:#D1FAE5;color:#065F46}.badge-warn{background:#FEF3C7;color:#92400E}
+.badge-red{background:#FEE2E2;color:#991B1B}.badge-blue{background:#DBEAFE;color:#1E40AF}
+.badge-gray{background:#F1F5F9;color:#475569}.badge-purple{background:#EDE9FE;color:#5B21B6}
+.badge-navy{background:#232E4F;color:white}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid var(--border);background:#F8FAFC}
+.tbl td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.05);vertical-align:middle}
+.tbl tr:hover td{background:rgba(0,0,0,0.015)}
+.tbl-empty{text-align:center;color:var(--muted);padding:30px!important;font-size:13px}
+
+/* ── PROGRESS ── */
+.prog-bar{height:7px;background:#E2E8F0;border-radius:4px;overflow:hidden;margin-top:3px}
+.prog-fill{height:100%;border-radius:4px;background:var(--gold);transition:width .3s}
+.prog-fill.g{background:var(--green)}.prog-fill.b{background:var(--blue)}.prog-fill.r{background:var(--red)}
+
+/* ── GLOBAL PROGRESS ── */
+.global-prog{background:white;border-radius:10px;border:0.5px solid var(--border);padding:16px 20px;margin-bottom:20px}
+.gp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.gp-title{font-size:14px;font-weight:700;color:var(--navy)}
+.gp-pct{font-size:22px;font-weight:800;color:var(--green)}
+.gp-bar{height:12px;background:#E2E8F0;border-radius:6px;overflow:hidden}
+.gp-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--green));transition:width .5s}
+.gp-legend{display:flex;gap:16px;margin-top:8px;font-size:11px;flex-wrap:wrap}
+.gp-leg-item{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.gp-dot{width:10px;height:10px;border-radius:50%}
+
+/* ── TIMELINE ── */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl{display:flex;gap:12px;padding-bottom:14px;position:relative}
+.tl::before{content:'';position:absolute;left:14px;top:30px;bottom:0;width:2px;background:#E2E8F0}
+.tl:last-child::before{display:none}
+.tl-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white}
+.tl-dot.past{background:#94A3B8}.tl-dot.done{background:var(--green)}.tl-dot.next{background:var(--gold);color:var(--navy)}
+.tl-dot.warn{background:var(--orange)}.tl-dot.future{background:var(--blue)}
+.tl-body{flex:1;padding-top:3px}
+.tl-date{font-size:10px;color:#94A3B8;font-weight:600}
+.tl-title{font-size:12px;font-weight:700;color:var(--navy)}
+.tl-desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── FORM MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:white;border-radius:12px;padding:22px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.form-row{margin-bottom:11px}
+.form-label{display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px}
+.form-input,.form-select,.form-textarea{width:100%;padding:8px 10px;border:1px solid #CBD5E0;border-radius:6px;font-size:12px;font-family:inherit;background:white}
+.form-textarea{resize:vertical;min-height:60px}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.btn-nav{background:var(--navy);color:white}.btn-nav:hover{background:var(--blue)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{opacity:.9}
+.btn-ghost{background:#E2E8F0;color:#374151}.btn-ghost:hover{background:#CBD5E0}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-danger{background:#FEE2E2;color:#991B1B}
+.icon-btn{background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:4px;font-size:13px;color:#94A3B8}
+.icon-btn:hover{background:#F1F5F9;color:var(--navy)}
+
+.doc-search-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.doc-search-input{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit}
+.doc-stats-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.doc-stat{background:white;border-radius:8px;padding:10px 14px;border:0.5px solid var(--border);font-size:11px;display:flex;align-items:center;gap:6px}
+.doc-stat-num{font-size:20px;font-weight:800;color:var(--navy)}
+.doc-category{margin-bottom:18px}
+.doc-cat-title{display:flex;align-items:center;padding:9px 14px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;cursor:pointer;user-select:none;gap:8px}
+.doc-cat-body{background:white;border:0.5px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+.doc-table{width:100%;border-collapse:collapse;font-size:11px}
+.doc-table th{padding:7px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);background:#FAFBFC}
+.doc-table td{padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.04);vertical-align:middle}
+.doc-table tr:last-child td{border-bottom:none}
+.doc-table tr:hover td{background:rgba(217,168,67,0.04)}
+.doc-branded{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:800;background:rgba(217,168,67,0.15);color:#92400E;border:1px solid var(--gold)}
+.doc-dl-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-size:10px;font-weight:700;background:var(--navy);color:white;border:none;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+.doc-dl-btn:hover{background:var(--blue)}.doc-dl-btn.disabled{background:#E2E8F0;color:#94A3B8;cursor:default}
+.qualiopi-tag{display:inline-flex;align-items:center;padding:2px 6px;border-radius:20px;font-size:9px;font-weight:700;background:#EFF6FF;color:#1E40AF}
+.doc-cat-toggle{font-size:12px;color:#94A3B8;margin-left:auto}
+.doc-cat-body.collapsed{display:none}
+
+/* ── CHECK DOTS ── */
+.chk{display:inline-flex;width:18px;height:18px;border-radius:4px;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.chk.ok{background:#D1FAE5;color:#065F46}.chk.no{background:#FEE2E2;color:#991B1B}
+
+/* ── SATISFACTION ── */
+.sat-card{background:white;border-radius:10px;border:0.5px solid var(--border);padding:14px 16px;text-align:center}
+.sat-score{font-size:36px;font-weight:800;color:var(--navy)}
+.sat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.sat-bar-wrap{display:flex;align-items:center;gap:10px;margin-top:8px}
+.sat-bar-label{font-size:11px;color:var(--muted);min-width:110px;text-align:right}
+.sat-bar-bg{flex:1;height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden}
+.sat-bar-fill{height:100%;border-radius:4px;background:var(--gold)}
+
+/* ── FOOTER ── */
+.footer{background:var(--navy);color:rgba(255,255,255,0.4);padding:10px 24px;font-size:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:20px}
+.footer strong{color:rgba(255,255,255,0.8)}
+
+/* ── UTIL ── */
+.flex{display:flex}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.gap-2{gap:8px}.gap-3{gap:12px}
+.justify-between{justify-content:space-between}.mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:12px}
+.mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.text-muted{color:var(--muted)}
+.section-title{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+/* ── PREUVES PAR BÉNÉFICIAIRE ── */
+.benef-proof-card{background:white;border-radius:10px;border:0.5px solid var(--border);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.benef-proof-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;border-bottom:1px solid transparent}
+.benef-proof-header.open{border-bottom-color:var(--border)}
+.benef-proof-name{font-size:13px;font-weight:800;color:var(--navy)}
+.benef-proof-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.benef-proof-progress{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.proof-pct{font-size:18px;font-weight:800}
+.proof-ring{width:44px;height:44px;flex-shrink:0}
+.benef-proof-body{display:none;padding:14px 16px}
+.benef-proof-card.open .benef-proof-body{display:block}
+.benef-proof-card.open .benef-proof-header{background:rgba(35,46,79,0.02)}
+.proof-section{margin-bottom:14px}
+.proof-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--navy);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--gold)}
+.proof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:7px}
+.proof-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:7px;border:0.5px solid var(--border);background:#FAFBFC;cursor:pointer;transition:background .15s}
+.proof-item:hover{background:rgba(217,168,67,0.05);border-color:var(--gold)}
+.proof-item.checked{background:#F0FDF4;border-color:#86EFAC}
+.proof-item.missing{background:#FEF2F2;border-color:#FCA5A5}
+.proof-chk{width:20px;height:20px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-top:1px}
+.proof-chk.y{background:#D1FAE5;color:#065F46}
+.proof-chk.n{background:#FEE2E2;color:#991B1B}
+.proof-chk.w{background:#FEF3C7;color:#92400E}
+.proof-info{flex:1}
+.proof-doc-name{font-size:11px;font-weight:600;color:var(--navy);line-height:1.3}
+.proof-doc-ref{font-size:10px;color:var(--muted);margin-top:1px}
+.proof-doc-date{font-size:10px;color:var(--green);margin-top:1px;font-weight:600}
+.proof-alert{font-size:10px;color:var(--red);margin-top:1px;font-weight:600}
+.proof-qualiopi{font-size:9px;background:#EDE9FE;color:#5B21B6;padding:1px 5px;border-radius:3px;font-weight:700}
+.proof-global-bar{height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;margin-top:3px}
+.proof-global-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--green))}
+.proof-date-input{font-size:10px;padding:2px 6px;border:1px solid #CBD5E0;border-radius:4px;font-family:inherit;background:white;width:110px}
+.proof-note-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(35,46,79,0.92);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.loading-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
+.loading-text{color:white;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media print{.tab-nav,.alert-strip,.btn,.icon-btn,.modal-overlay{display:none!important}.tab-pane{display:block!important}.header{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div style="text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">Maïeuti<span style="color:#D9A843">Cap</span></div>
+    <div class="loading-spinner"></div>
+    <div class="loading-text" style="margin-top:12px">Chargement de vos données...</div>
+  </div>
+</div>
+<header class="header">
+  <div class="logo-main">
+    <div class="logo-name">Maïeuti<span>Cap</span></div>
+    <div class="logo-tag">Révélateur de Potentiels</div>
+    <div class="logo-meta">NDA : 93061024406 &nbsp;|&nbsp; SIRET : 92121118100018 &nbsp;|&nbsp; 11 rue G. Charbonnier, 06300 Nice &nbsp;|&nbsp; Référente qualité : Meryem Vitré</div>
+  </div>
+  <div class="header-badges">
+    <div class="qualiopi-pill">
+      <div class="qp-title">✓ Certifié Qualiopi</div>
+      <div class="qp-date">BC + Actions de formation<br>depuis le 09/04/2025</div>
+    </div>
+    <div class="countdown-pill">
+      <div class="cp-label">Prochain audit</div>
+      <div class="cp-days" id="cdDays">—</div>
+      <div class="cp-sub">jours · Janvier 2027</div>
+    </div>
+  </div>
+</header>
+
+<!-- ALERT STRIP -->
+<div class="alert-strip" id="alertStrip"></div>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab(0)">🏠 Tableau de bord</button>
+  <button class="tab-btn" onclick="switchTab(1)">✅ Référentiel Qualiopi</button>
+  <button class="tab-btn" onclick="switchTab(2)">👥 Bénéficiaires</button>
+  <button class="tab-btn" onclick="switchTab(3)">📊 Satisfaction</button>
+  <button class="tab-btn" onclick="switchTab(4)">⚠️ Incidents & Réclamations</button>
+  <button class="tab-btn" onclick="switchTab(5)">🔧 Plan d'amélioration</button>
+  <button class="tab-btn" onclick="switchTab(6)">📅 Calendrier qualité</button>
+  <button class="tab-btn" onclick="switchTab(7)">📁 Bibliothèque documents</button>
+  <button class="tab-btn" onclick="switchTab(8)">📎 Preuves par bénéficiaire</button>
+</nav>
+
+<!-- ═══════════════ TAB 0 : TABLEAU DE BORD ═══════════════ -->
+<div class="tab-pane active" id="tab0">
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="two-col">
+    <div>
+      <div class="global-prog">
+        <div class="gp-top">
+          <span class="gp-title">🎯 Conformité Qualiopi globale</span>
+          <span class="gp-pct" id="globalPct">—</span>
+        </div>
+        <div class="gp-bar"><div class="gp-fill" id="globalBar" style="width:0%"></div></div>
+        <div class="gp-legend">
+          <div class="gp-leg-item"><div class="gp-dot" style="background:var(--green)"></div>Conforme</div>
+          <div class="gp-leg-item"><div class="gp-dot" style="background:var(--orange)"></div>En cours</div>
+          <div class="gp-leg-item"><div class="gp-dot" style="background:var(--red)"></div>À traiter</div>
+        </div>
+        <div id="critSummary" class="mt-2"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-head-title">🔔 Alertes prioritaires</span></div>
+        <div class="card-body" id="alertsPanel" style="padding:10px 14px"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-head"><span class="card-head-title">📅 Prochaines échéances</span></div>
+        <div class="card-body" style="padding:14px 16px">
+          <div class="timeline" id="echeancesTimeline"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-head-title">📋 Dernières actions</span></div>
+        <div class="card-body" id="recentActions" style="padding:10px 14px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB 1 : QUALIOPI ═══════════════ -->
+<div class="tab-pane" id="tab1">
+  <div class="flex items-center justify-between mb-3">
+    <div class="section-title">✅ Référentiel Qualiopi — 7 critères / 32 indicateurs</div>
+    <div style="display:flex;gap:8px">
+      <span class="badge badge-navy" id="q-conforme-count">— Conformes</span>
+      <span class="badge badge-warn" id="q-encours-count">— En cours</span>
+      <span class="badge badge-red" id="q-atraiter-count">— À traiter</span>
+    </div>
+  </div>
+  <div class="crit-list" id="critList"></div>
+</div>
+
+<!-- ═══════════════ TAB 2 : BÉNÉFICIAIRES ═══════════════ -->
+<div class="tab-pane" id="tab2">
+  <div class="flex items-center justify-between mb-3">
+    <div class="section-title">👥 Suivi des bénéficiaires</div>
+    <button class="btn btn-gold btn-sm" onclick="openModal('modalBenef')">+ Nouveau bénéficiaire</button>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-head-title">Parcours en cours &amp; terminés</span>
+      <div style="display:flex;gap:6px">
+        <select id="filterType" class="form-select" style="width:auto;padding:4px 8px;font-size:11px" onchange="renderBenefTable()">
+          <option value="">Tous</option><option value="BC">Bilan de Compétences</option><option value="Formation">Formation</option>
+        </select>
+        <select id="filterStatut" class="form-select" style="width:auto;padding:4px 8px;font-size:11px" onchange="renderBenefTable()">
+          <option value="">Tous statuts</option><option value="En cours">En cours</option><option value="Terminé">Terminé</option><option value="Abandon">Abandon</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table class="tbl" id="benefTable">
+        <thead><tr>
+          <th>Bénéficiaire</th><th>Type</th><th>Début</th><th>Fin prévue</th>
+          <th>Statut</th><th>Conv.</th><th>Ém.</th><th>Eval.I</th><th>Eval.F</th><th>Synthèse</th>
+          <th>Satisfaction</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="benefTbody"><tr><td colspan="12" class="tbl-empty">Chargement…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB 3 : SATISFACTION ═══════════════ -->
+<div class="tab-pane" id="tab3">
+  <div class="section-title">📊 Résultats satisfaction — Toutes parties prenantes</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="satCards"></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">Taux de satisfaction par public</span></div>
+      <div class="card-body">
+        <div style="position:relative;height:220px"><canvas id="satBarChart" role="img" aria-label="Taux satisfaction par public"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">Évolution trimestrielle</span></div>
+      <div class="card-body">
+        <div style="position:relative;height:220px"><canvas id="satLineChart" role="img" aria-label="Évolution satisfaction"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-head-title">Détail notes bénéficiaires</span>
+      <button class="btn btn-gold btn-sm" onclick="openModal('modalSat')">+ Ajouter réponse</button>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table class="tbl" id="satTable">
+        <thead><tr><th>Date</th><th>Bénéficiaire</th><th>Type</th><th>Note /10</th><th>Commentaire</th><th>Action</th></tr></thead>
+        <tbody id="satTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB 4 : INCIDENTS ═══════════════ -->
+<div class="tab-pane" id="tab4">
+  <div class="section-title">⚠️ Registre des incidents, aléas &amp; réclamations</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-title">🔴 Réclamations</span>
+        <button class="btn btn-gold btn-sm" onclick="openModal('modalReclam')">+ Nouvelle</button>
+      </div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table class="tbl" id="reclamTable">
+          <thead><tr><th>Date</th><th>Émetteur</th><th>Objet</th><th>Gravité</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="reclamTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-title">🟡 Aléas &amp; incidents</span>
+        <button class="btn btn-gold btn-sm" onclick="openModal('modalIncident')">+ Nouvel aléa</button>
+      </div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table class="tbl" id="incidentTable">
+          <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Impact</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="incidentTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB 5 : PLAN D'AMÉLIORATION ═══════════════ -->
+<div class="tab-pane" id="tab5">
+  <div class="flex items-center justify-between mb-3">
+    <div class="section-title">🔧 Plan d'actions d'amélioration continue</div>
+    <button class="btn btn-gold btn-sm" onclick="openModal('modalAction')">+ Nouvelle action</button>
+  </div>
+  <div class="kpi-grid" id="actionKpis"></div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-head-title">Suivi des actions</span>
+      <div style="display:flex;gap:6px">
+        <select id="filterActionStatut" class="form-select" style="width:auto;padding:4px 8px;font-size:11px" onchange="renderActionsTable()">
+          <option value="">Tous statuts</option><option value="Ouvert">Ouvert</option><option value="En cours">En cours</option><option value="Clôturé">Clôturé</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table class="tbl" id="actionsTable">
+        <thead><tr><th>Source</th><th>Date</th><th>Action</th><th>Responsable</th><th>Échéance</th><th>Priorité</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="actionsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB 6 : CALENDRIER ═══════════════ -->
+<div class="tab-pane" id="tab6">
+  <div class="section-title">📅 Calendrier qualité — Échéances &amp; revues</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">🗓️ Revues qualité trimestrielles 2025–2026</span></div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="timeline" id="revuesTimeline"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-head-title">🏁 Jalons Qualiopi</span></div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="timeline" id="jalonsTimeline"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="card-head-title">📋 Checklist revue qualité trimestrielle</span></div>
+    <div class="card-body" id="checklistRevue" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB 7 : DOCUMENTS ═══════════════ -->
+<div class="tab-pane" id="tab7">
+  <div class="section-title" style="margin-bottom:8px">📁 Bibliothèque documentaire — Conformité Qualiopi</div>
+  <div class="doc-search-bar">
+    <input class="doc-search-input" id="docSearch" placeholder="🔍 Rechercher un document, une référence, un indicateur..." oninput="renderDocuments()">
+    <select class="form-select" id="filterQ" style="padding:8px 10px;font-size:12px;width:auto" onchange="renderDocuments()">
+      <option value="">Tous indicateurs</option>
+      <option value="I1">I1</option><option value="I2">I2</option><option value="I3">I3</option>
+      <option value="I4">I4</option><option value="I5">I5</option><option value="I6">I6</option>
+      <option value="I7">I7</option><option value="I8">I8</option><option value="I9">I9</option>
+      <option value="I10">I10</option><option value="I12">I12</option><option value="I13">I13</option>
+      <option value="I15">I15</option><option value="I16">I16</option><option value="I17">I17</option>
+      <option value="I18">I18</option><option value="I19">I19</option><option value="I20">I20</option>
+      <option value="I21">I21</option><option value="I23">I23</option><option value="I24">I24</option>
+      <option value="I26">I26</option><option value="I27">I27</option><option value="I28">I28</option>
+      <option value="I29">I29</option><option value="I30">I30</option><option value="I31">I31</option>
+      <option value="I32">I32</option>
+    </select>
+    <select class="form-select" id="filterBrand" style="padding:8px 10px;font-size:12px;width:auto" onchange="renderDocuments()">
+      <option value="">Tous les documents</option>
+      <option value="yes">⭐ Uniformisés charte uniquement</option>
+      <option value="no">À uniformiser</option>
+    </select>
+    <button class="btn btn-gold btn-sm" onclick="document.getElementById('docSearch').value='';document.getElementById('filterQ').value='';document.getElementById('filterBrand').value='';renderDocuments()">✕ Réinitialiser</button>
+  </div>
+  <div id="docLibrary"></div>
+</div>
+
+<!-- ═══════════════ TAB 8 : PREUVES PAR BÉNÉFICIAIRE ═══════════════ -->
+<div class="tab-pane" id="tab8">
+  <div class="flex items-center justify-between mb-3">
+    <div class="section-title">📎 Dossier de preuves par bénéficiaire — Conformité Qualiopi</div>
+    <div style="display:flex;gap:8px">
+      <select id="filterProofType" class="form-select" style="width:auto;padding:5px 10px;font-size:11px" onchange="renderProofs()">
+        <option value="">Tous types</option><option value="BC">Bilan de Compétences</option><option value="Formation">Formation</option>
+      </select>
+      <select id="filterProofStatut" class="form-select" style="width:auto;padding:5px 10px;font-size:11px" onchange="renderProofs()">
+        <option value="">Tous statuts</option><option value="En cours">En cours</option><option value="Terminé">Terminé</option>
+      </select>
+    </div>
+  </div>
+  <div style="background:rgba(217,168,67,0.1);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:#92400E">
+    🔍 <strong>Attendu Qualiopi :</strong> Chaque dossier bénéficiaire doit comporter l'ensemble des preuves justificatives. Un dossier incomplet est un risque pour l'audit. Cliquez sur un bénéficiaire pour ouvrir son dossier complet.
+  </div>
+  <div id="proofsContainer"></div>
+</div>
+
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Modal Bénéficiaire -->
+<div class="modal-overlay" id="modalBenef">
+  <div class="modal">
+    <div class="modal-title">👤 Nouveau bénéficiaire <button class="icon-btn" onclick="closeModal('modalBenef')" style="font-size:18px">✕</button></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="bNom" placeholder="NOM Prénom"></div>
+      <div class="form-row"><label class="form-label">Type</label>
+        <select class="form-select" id="bType"><option>BC</option><option>Formation</option></select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Date de début</label><input class="form-input" type="date" id="bDebut"></div>
+      <div class="form-row"><label class="form-label">Date de fin prévue</label><input class="form-input" type="date" id="bFin"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Financement</label>
+      <select class="form-select" id="bFinancement"><option>CPF</option><option>OPCO</option><option>Pôle emploi</option><option>Personnel</option><option>Entreprise</option></select>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('modalBenef')">Annuler</button><button class="btn btn-gold" onclick="addBenef()">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Modal Satisfaction -->
+<div class="modal-overlay" id="modalSat">
+  <div class="modal">
+    <div class="modal-title">😊 Ajouter une réponse satisfaction <button class="icon-btn" onclick="closeModal('modalSat')" style="font-size:18px">✕</button></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Bénéficiaire</label><input class="form-input" id="sNom" placeholder="Nom"></div>
+      <div class="form-row"><label class="form-label">Note /10</label><input class="form-input" type="number" id="sNote" min="0" max="10" placeholder="9"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="sDate"></div>
+      <div class="form-row"><label class="form-label">Type</label>
+        <select class="form-select" id="sType"><option>BC</option><option>Formation</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Commentaire</label><textarea class="form-textarea" id="sComment" placeholder="Retour libre…"></textarea></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('modalSat')">Annuler</button><button class="btn btn-gold" onclick="addSat()">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Modal Réclamation -->
+<div class="modal-overlay" id="modalReclam">
+  <div class="modal">
+    <div class="modal-title">🔴 Nouvelle réclamation <button class="icon-btn" onclick="closeModal('modalReclam')" style="font-size:18px">✕</button></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="rDate"></div>
+      <div class="form-row"><label class="form-label">Émetteur</label>
+        <select class="form-select" id="rEmetteur"><option>Bénéficiaire</option><option>Financeur</option><option>Entreprise</option><option>Donneur d'ordre</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Objet</label><input class="form-input" id="rObjet" placeholder="Objet de la réclamation"></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Gravité</label>
+        <select class="form-select" id="rGravite"><option>Mineure</option><option>Majeure</option><option>Critique</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Statut</label>
+        <select class="form-select" id="rStatut"><option>Ouvert</option><option>En cours</option><option>Clôturé</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Action corrective</label><textarea class="form-textarea" id="rAction" placeholder="Action mise en place…"></textarea></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('modalReclam')">Annuler</button><button class="btn btn-gold" onclick="addReclam()">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Modal Incident -->
+<div class="modal-overlay" id="modalIncident">
+  <div class="modal">
+    <div class="modal-title">🟡 Nouvel aléa / incident <button class="icon-btn" onclick="closeModal('modalIncident')" style="font-size:18px">✕</button></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="iDate"></div>
+      <div class="form-row"><label class="form-label">Type</label>
+        <select class="form-select" id="iType"><option>Technique</option><option>Pédagogique</option><option>Administratif</option><option>Logistique</option><option>Autre</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Description</label><textarea class="form-textarea" id="iDesc" placeholder="Description de l'incident…"></textarea></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Impact</label>
+        <select class="form-select" id="iImpact"><option>Faible</option><option>Moyen</option><option>Élevé</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Statut</label>
+        <select class="form-select" id="iStatut"><option>Ouvert</option><option>En cours</option><option>Clôturé</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Action de traitement</label><textarea class="form-textarea" id="iAction" placeholder="Mesure prise…"></textarea></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('modalIncident')">Annuler</button><button class="btn btn-gold" onclick="addIncident()">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Modal Action -->
+<div class="modal-overlay" id="modalAction">
+  <div class="modal">
+    <div class="modal-title">🔧 Nouvelle action d'amélioration <button class="icon-btn" onclick="closeModal('modalAction')" style="font-size:18px">✕</button></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Source</label>
+        <select class="form-select" id="aSource"><option>Satisfaction</option><option>Réclamation</option><option>Audit</option><option>Veille</option><option>Auto-évaluation</option><option>Interne</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="aDate"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Action</label><textarea class="form-textarea" id="aAction" placeholder="Description de l'action…"></textarea></div>
+    <div class="form-row-2">
+      <div class="form-row"><label class="form-label">Échéance</label><input class="form-input" type="date" id="aEcheance"></div>
+      <div class="form-row"><label class="form-label">Priorité</label>
+        <select class="form-select" id="aPriorite"><option>Haute</option><option>Normale</option><option>Basse</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Statut</label>
+      <select class="form-select" id="aStatut"><option>Ouvert</option><option>En cours</option><option>Clôturé</option></select>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('modalAction')">Annuler</button><button class="btn btn-gold" onclick="addAction()">Enregistrer</button></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span><strong>MaïeutiCap</strong> — Outil de pilotage qualité Qualiopi &nbsp;|&nbsp; Version 2025</span>
+  <span>contact@maieuticap.fr &nbsp;|&nbsp; 06 76 07 83 70 &nbsp;|&nbsp; www.maieuticap.fr</span>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+const QUALIOPI = [
+  { id:1, color:'#18478D', label:'Information du public', sub:'Conditions, délais, tarifs, résultats, accessibilité PSH',
+    indicators:[
+      {id:'I1',label:"Offre de formation publiée (conditions, délais, tarifs, financements, résultats obtenus)", preuves:"Site web, plaquettes commerciales, Livret d'accueil", status:'conforme'},
+      {id:'I2',label:"Accessibilité aux publics en situation de handicap mentionnée dans l'offre", preuves:"Questionnaire PSH, Procédure Adaptations Handicap V2025", status:'conforme'},
+      {id:'I3',label:"Indicateurs et méthodes mobilisées communiqués (taux de satisfaction, taux d'insertion…)", preuves:"Tableau de bord satisfaction, publication sur Datadock", status:'conforme'},
+    ]},
+  { id:2, color:'#D9A843', label:'Identification et analyse des besoins', sub:"Objectifs opérationnels, progression pédagogique individualisée",
+    indicators:[
+      {id:'I4',label:"Analyse des besoins du bénéficiaire réalisée avant la prestation (entretien préalable)", preuves:"Guide entretien préalable BC, Grille analyse besoins participants", status:'conforme'},
+      {id:'I5',label:"Objectifs opérationnels et contenus définis en cohérence avec les besoins identifiés", preuves:"Programme BC V2025, Programme Formation Soft Skills, Déroulé pédagogique", status:'conforme'},
+      {id:'I6',label:"Progression pédagogique individualisée pour chaque bénéficiaire", preuves:"Fiche suivi formation BC, Contrat/Convention de formation", status:'conforme'},
+      {id:'I7',label:"Besoins des entreprises / commanditaires identifiés et pris en compte", preuves:"Analyse besoins commanditaire V1, Convention de formation entreprise", status:'en_cours'},
+    ]},
+  { id:3, color:'#515276', label:'Adaptation des prestations', sub:"Modalités pédagogiques, évaluations, suivi, PSH",
+    indicators:[
+      {id:'I8',label:"Moyens pédagogiques, techniques et humains adaptés aux besoins et objectifs", preuves:"Déroulé pédagogique, outils numériques (Teams, Digiforma)", status:'conforme'},
+      {id:'I9',label:"Évaluations des acquis réalisées pendant la prestation", preuves:"Évaluation initiale Soft Skills V1, Grille évaluation BC V1", status:'conforme'},
+      {id:'I10',label:"Évaluation réalisée en fin de prestation (compétences acquises, résultats)", preuves:"Évaluation finale Soft Skills V1, Document de synthèse BC", status:'conforme'},
+      {id:'I11',label:"Bénéficiaire informé des résultats obtenus et des suites possibles", preuves:"Document de synthèse remis au bénéficiaire, attestation de formation", status:'conforme'},
+      {id:'I12',label:"Conditions d'accueil, accompagnement, suivi adaptés aux PSH", preuves:"Adaptations Handicap V2025, Carnet de liaison PSH, Référent handicap désigné", status:'conforme'},
+    ]},
+  { id:4, color:'#799BA5', label:'Moyens pédagogiques et techniques', sub:"Outils, coordination, qualification intervenants",
+    indicators:[
+      {id:'I13',label:"Progression pédagogique mise en œuvre conformément aux engagements", preuves:"Feuilles d'émargement, FICHE SUIVI FORMATION BC", status:'conforme'},
+      {id:'I14',label:"Outils et pratiques pédagogiques adaptés aux publics et objectifs", preuves:"Supports pédagogiques Soft Skills, Extraction bot BC, Outils numériques", status:'conforme'},
+      {id:'I15',label:"Formateurs mobilisés qualifiés (titres, diplômes, compétences)", preuves:"CV Meryem Vitré, Fiche de poste Responsable Pédagogique, Diplômes", status:'conforme'},
+      {id:'I16',label:"Coordination pédagogique assurée (intervenants informés des objectifs)", preuves:"Charte sous-traitant Qualiopi, Contrat de sous-traitance, Fiche de poste", status:'conforme'},
+    ]},
+  { id:5, color:'#7C3AED', label:'Qualification et développement des compétences', sub:"Veilles, formation des équipes, évaluation des intervenants",
+    indicators:[
+      {id:'I17',label:"Veille légale et réglementaire sur la formation professionnelle mise en œuvre", preuves:"Procédure veille stratégique, Tableau veille Feedly/LinkedIn, Abonnements newsletters", status:'conforme'},
+      {id:'I18',label:"Veille sur innovations pédagogiques et technologiques réalisée", preuves:"Tableau veille innovation technique, Participation à des clubs formateurs", status:'conforme'},
+      {id:'I19',label:"Compétences des intervenants évaluées régulièrement", preuves:"Grille évaluation compétences formateur, EVALUATION DE FORMATION FORMATEUR", status:'en_cours'},
+      {id:'I20',label:"Mesures pour le maintien et développement des compétences mises en œuvre", preuves:"Plan de développement des compétences Maieuticap V2025", status:'conforme'},
+      {id:'I21',label:"Ressources mobilisées pour l'accueil et intégration de nouveaux intervenants", preuves:"Charte sous-traitant, Fiche de poste BC, Procédures qualité mises à disposition", status:'conforme'},
+    ]},
+  { id:6, color:'#059669', label:'Inscription dans l\'environnement', sub:"PSH, partenariats, territoire, responsabilité sociale",
+    indicators:[
+      {id:'I22',label:"Insertion dans l'environnement socio-économique (partenariats locaux, RSE)", preuves:"Partenariats entreprises locales, Réseau prescripteurs PACA", status:'en_cours'},
+      {id:'I23',label:"Expertises, outils et réseaux pour accueil et accompagnement des PSH mobilisés (I26)", preuves:"Questionnaire PSH, Boîte à outils référent handicap, Attestation formation handicap", status:'conforme'},
+      {id:'I24',label:"Réseau de partenaires socio-économiques pour co-construction et accueil en entreprise (I28)", preuves:"Conventions partenariats, Grilles visite entreprise, Livret accompagnement BC", status:'en_cours'},
+      {id:'I25',label:"Lutte contre l'illettrisme et maîtrise des compétences clés intégrée", preuves:"Évaluation initiale Soft Skills, Adaptations pédagogiques individualisées", status:'conforme'},
+    ]},
+  { id:7, color:'#DC2626', label:'Amélioration continue', sub:"Appréciations parties prenantes, réclamations, auto-évaluation",
+    indicators:[
+      {id:'I26',label:"Appréciations des bénéficiaires recueillies (questionnaires de satisfaction) (I30)", preuves:"Questionnaire satisfaction bénéficiaires, Mail envoi questionnaire à froid", status:'conforme'},
+      {id:'I27',label:"Appréciations des financeurs recueillies", preuves:"Questionnaire satisfaction commanditaire, Questionnaire satisfaction financeurs", status:'conforme'},
+      {id:'I28',label:"Appréciations des équipes pédagogiques recueillies", preuves:"Grille évaluation formateur (auto-évaluation dirigeante)", status:'conforme'},
+      {id:'I29',label:"Analyse des appréciations et mise en œuvre d'améliorations (revue trimestrielle)", preuves:"Tableau suivi actions amélioration V2025, Procédure satisfaction/réclamations/aléas", status:'conforme'},
+      {id:'I30',label:"Réclamations et aléas traités dans un registre dédié", preuves:"Tableau suivi réclamations V2025, Registre incidents et aléas, Fiche réclamation", status:'conforme'},
+      {id:'I31',label:"Auto-évaluation périodique réalisée", preuves:"Revue qualité trimestrielle (Google Calendar), Indicateurs de pilotage", status:'en_cours'},
+      {id:'I32',label:"Indicateurs de résultats suivis et publiés (taux satisfaction, taux abandon, taux insertion)", preuves:"Indicateur 26, 28, 30 — Tableaux de bord qualification des indicateurs", status:'conforme'},
+    ]},
+];
+
+const defaultBenefs = [
+  {id:1,nom:'VITRÉ Meryem',type:'BC',debut:'2025-03-18',fin:'2025-06-18',statut:'En cours',financement:'CPF',sat:null,conv:true,em:true,evalI:true,evalF:false,synth:false,
+   preuves:{entretienPrealab:'2025-03-10',contratSigne:'2025-03-18',livretRemis:'2025-03-18',riSigne:'2025-03-18',pshQuestionnaire:false,phasePrelim:'2025-03-25',phaseInvest1:'',phaseInvest2:'',phaseConclus:'',grilleEvalI:'2025-03-25',grilleEvalF:'',synthese:'',attestation:'',satChaud:'',satFroid:'',qstFroidDate:''}},
+  {id:2,nom:'MARTIN Sophie',type:'BC',debut:'2025-02-01',fin:'2025-05-01',statut:'Terminé',financement:'CPF',sat:9,conv:true,em:true,evalI:true,evalF:true,synth:true,
+   preuves:{entretienPrealab:'2025-01-20',contratSigne:'2025-02-01',livretRemis:'2025-02-01',riSigne:'2025-02-01',pshQuestionnaire:false,phasePrelim:'2025-02-10',phaseInvest1:'2025-02-24',phaseInvest2:'2025-03-10',phaseConclus:'2025-04-28',grilleEvalI:'2025-02-10',grilleEvalF:'2025-04-28',synthese:'2025-04-28',attestation:'2025-05-01',satChaud:'2025-05-01',satFroid:'',qstFroidDate:'2025-11-01'}},
+  {id:3,nom:'DUPONT Pierre',type:'Formation',debut:'2025-04-10',fin:'2025-07-10',statut:'En cours',financement:'OPCO',sat:null,conv:true,em:true,evalI:true,evalF:false,synth:false,
+   preuves:{conventionSignee:'2025-04-08',riSigne:'2025-04-10',livretRemis:'2025-04-10',evalInitiale:'2025-04-10',emargement1:'2025-04-10',emargement2:'2025-04-24',evalFormative:'',planAction:'',attestation:'',satChaud:'',satFroid:'',qstFroidDate:''}},
+  {id:4,nom:'BERNARD Claire',type:'BC',debut:'2025-01-15',fin:'2025-04-15',statut:'Terminé',financement:'Pôle emploi',sat:10,conv:true,em:true,evalI:true,evalF:true,synth:true,
+   preuves:{entretienPrealab:'2025-01-05',contratSigne:'2025-01-15',livretRemis:'2025-01-15',riSigne:'2025-01-15',pshQuestionnaire:false,phasePrelim:'2025-01-22',phaseInvest1:'2025-02-05',phaseInvest2:'2025-02-19',phaseConclus:'2025-04-10',grilleEvalI:'2025-01-22',grilleEvalF:'2025-04-10',synthese:'2025-04-10',attestation:'2025-04-15',satChaud:'2025-04-15',satFroid:'2025-10-15',qstFroidDate:'2025-10-15'}},
+  {id:5,nom:'THOMAS Jean',type:'Formation',debut:'2025-05-05',fin:'2025-08-05',statut:'En cours',financement:'OPCO',sat:null,conv:true,em:false,evalI:false,evalF:false,synth:false,
+   preuves:{conventionSignee:'2025-05-02',riSigne:'',livretRemis:'',evalInitiale:'',emargement1:'',emargement2:'',evalFormative:'',planAction:'',attestation:'',satChaud:'',satFroid:'',qstFroidDate:''}},
+  {id:6,nom:'LEROY Anne',type:'BC',debut:'2024-11-01',fin:'2025-02-01',statut:'Terminé',financement:'CPF',sat:8,conv:true,em:true,evalI:true,evalF:true,synth:true,
+   preuves:{entretienPrealab:'2024-10-20',contratSigne:'2024-11-01',livretRemis:'2024-11-01',riSigne:'2024-11-01',pshQuestionnaire:false,phasePrelim:'2024-11-08',phaseInvest1:'2024-11-22',phaseInvest2:'2024-12-06',phaseConclus:'2025-01-28',grilleEvalI:'2024-11-08',grilleEvalF:'2025-01-28',synthese:'2025-01-28',attestation:'2025-02-01',satChaud:'2025-02-01',satFroid:'',qstFroidDate:'2025-08-01'}},
+];
+const defaultSat = [
+  {id:1,date:'2025-04-20',nom:'MARTIN Sophie',type:'BC',note:9,comment:'Accompagnement très personnalisé, excellente écoute'},
+  {id:2,date:'2025-04-02',nom:'BERNARD Claire',type:'BC',note:10,comment:'Bilan très enrichissant, je me sens enfin claire sur mon avenir'},
+  {id:3,date:'2025-03-05',nom:'LEROY Anne',type:'BC',note:8,comment:'Satisfaite globalement, quelques délais de réponse à améliorer'},
+];
+const defaultReclamations = [
+  {id:1,date:'2025-03-15',emetteur:'Bénéficiaire',objet:'Délai de réponse mail supérieur à 48h',gravite:'Mineure',statut:'Clôturé',action:'Mise en place alerte mail automatique + engagement réponse sous 24h'},
+];
+const defaultIncidents = [
+  {id:1,date:'2025-02-10',type:'Technique',desc:'Problème connexion Teams pendant séance distancielle',impact:'Faible',statut:'Clôturé',action:'Reprogrammation séance à J+2, bénéficiaire informé'},
+];
+const defaultActions = [
+  {id:1,source:'Audit',date:'2025-04-09',action:"Mettre à jour le programme BC V2025 selon retours auditeur",responsable:'M. Vitré',echeance:'2025-06-30',priorite:'Haute',statut:'En cours'},
+  {id:2,source:'Satisfaction',date:'2025-03-01',action:"Envoyer questionnaire à froid 6 mois à tous les bénéficiaires 2024",responsable:'M. Vitré',echeance:'2025-07-31',priorite:'Haute',statut:'En cours'},
+  {id:3,source:'Veille',date:'2025-02-15',action:"Compléter tableau veille accessibilité 2025 et abonnements newsletters",responsable:'M. Vitré',echeance:'2025-06-30',priorite:'Normale',statut:'En cours'},
+  {id:4,source:'Interne',date:'2025-01-10',action:"Finaliser plan de développement des compétences 2025-2026",responsable:'M. Vitré',echeance:'2025-07-01',priorite:'Normale',statut:'En cours'},
+  {id:5,source:'Auto-évaluation',date:'2025-04-09',action:"Mettre en place revues qualité trimestrielles formalisées avec compte-rendu",responsable:'M. Vitré',echeance:'2025-06-01',priorite:'Haute',statut:'Ouvert'},
+  {id:6,source:'Interne',date:'2025-03-20',action:"Compléter les partenariats socio-économiques (conventions partenaires PACA)",responsable:'M. Vitré',echeance:'2025-09-30',priorite:'Normale',statut:'Ouvert'},
+  {id:7,source:'Veille',date:'2025-01-15',action:"Mettre à jour veille accessibilité formation V2025",responsable:'M. Vitré',echeance:'2025-04-30',priorite:'Normale',statut:'Clôturé'},
+];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+// ── STATE — initialisé depuis Supabase ──────────────────────────────────────
+let state = {
+  benefs:[], sat:[], reclamations:[], incidents:[], actions:[],
+  qualiopi:JSON.parse(JSON.stringify(QUALIOPI)),
+  nextId:{benef:10,sat:10,reclam:10,incident:10,action:20},
+  loaded:false
+};
+
+// Mapping Supabase snake_case → JS camelCase
+function mapBenef(b){
+  return {...b, evalI:b.eval_i, evalF:b.eval_f,
+    preuves: typeof b.preuves==='string'?JSON.parse(b.preuves||'{}'):(b.preuves||{})};
+}
+function mapAction(a){ return {...a}; }
+
+async function loadFromSupabase(){
+  showLoading(true);
+  try{
+    const [b,s,r,i,a,q] = await Promise.all([
+      db.from('benefs').select('*').order('id'),
+      db.from('satisfaction').select('*').order('id'),
+      db.from('reclamations').select('*').order('id'),
+      db.from('incidents').select('*').order('id'),
+      db.from('actions').select('*').order('id'),
+      db.from('qualiopi_statuts').select('*'),
+    ]);
+    state.benefs = (b.data||[]).map(mapBenef);
+    state.sat = s.data||[];
+    state.reclamations = r.data||[];
+    state.incidents = i.data||[];
+    state.actions = a.data||[];
+    // Apply saved Qualiopi statuses
+    (q.data||[]).forEach(qs=>{
+      for(const c of state.qualiopi){
+        const ind=c.indicators.find(x=>x.id===qs.indicateur_id);
+        if(ind) ind.status=qs.statut;
+      }
+    });
+    state.loaded=true;
+  }catch(e){
+    console.error('Supabase load error:',e);
+    // Fallback to defaults
+    state.benefs=[...defaultBenefs];
+    state.sat=[...defaultSat];
+    state.reclamations=[...defaultReclamations];
+    state.incidents=[...defaultIncidents];
+    state.actions=[...defaultActions];
+    state.loaded=true;
+  }
+  showLoading(false);
+}
+
+function saveState(){
+  // No-op: data is saved directly to Supabase on each operation
+}
+function loadState(){ return state; }
+
+function showLoading(show){
+  const el=document.getElementById('loadingOverlay');
+  if(el) el.style.display=show?'flex':'none';
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════
+function fmt(dateStr){if(!dateStr)return'—';const d=new Date(dateStr);return d.toLocaleDateString('fr-FR');}
+function fmtShort(dateStr){if(!dateStr)return'—';const d=new Date(dateStr);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});}
+function daysFrom(dateStr){const d=new Date(dateStr);const now=new Date();return Math.ceil((d-now)/(1000*60*60*24));}
+function badgeStatus(s){
+  const m={conforme:'badge-ok',en_cours:'badge-warn',a_traiter:'badge-red','Conforme':'badge-ok','En cours':'badge-warn','À traiter':'badge-red',Terminé:'badge-blue',Abandon:'badge-red',Ouvert:'badge-warn',Clôturé:'badge-ok',Haute:'badge-red',Normale:'badge-warn',Basse:'badge-gray',Mineure:'badge-warn',Majeure:'badge-red',Critique:'badge-red',Faible:'badge-ok',Moyen:'badge-warn',Élevé:'badge-red'};
+  return m[s]||'badge-gray';
+}
+function labelStatus(s){const m={conforme:'Conforme',en_cours:'En cours',a_traiter:'À traiter'};return m[s]||s;}
+function chkHtml(v){return`<span class="chk ${v?'ok':'no'}">${v?'✓':'✗'}</span>`;}
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+// ═══════════════════════════════════════════════════════════
+//  COUNTDOWN
+// ═══════════════════════════════════════════════════════════
+function updateCountdown(){
+  const audit=new Date('2027-01-15');
+  const now=new Date();
+  const days=Math.ceil((audit-now)/(1000*60*60*24));
+  const el=document.getElementById('cdDays');
+  if(el) el.textContent=days>0?days:'!';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ALERTS
+// ═══════════════════════════════════════════════════════════
+function computeAlerts(){
+  const alerts=[];
+  const now=new Date();
+  // Qualiopi non conformes
+  let aTraiter=0,enCours=0;
+  for(const c of state.qualiopi){for(const i of c.indicators){if(i.status==='a_traiter')aTraiter++;else if(i.status==='en_cours')enCours++;}}
+  if(aTraiter>0) alerts.push({type:'urgent',msg:`${aTraiter} indicateur${aTraiter>1?'s':''} Qualiopi à traiter`});
+  if(enCours>0) alerts.push({type:'warn',msg:`${enCours} indicateur${enCours>1?'s':''} en cours de conformité`});
+  // Actions échues
+  const actionsEchues=state.actions.filter(a=>a.statut!=='Clôturé'&&daysFrom(a.echeance)<0).length;
+  const actionsUrgentes=state.actions.filter(a=>a.statut!=='Clôturé'&&daysFrom(a.echeance)>=0&&daysFrom(a.echeance)<=30).length;
+  if(actionsEchues>0) alerts.push({type:'urgent',msg:`${actionsEchues} action${actionsEchues>1?'s':''} en retard`});
+  if(actionsUrgentes>0) alerts.push({type:'warn',msg:`${actionsUrgentes} action${actionsUrgentes>1?'s':''} dues dans 30j`});
+  // Questionnaires manquants
+  const sansSat=state.benefs.filter(b=>b.statut==='Terminé'&&!b.sat).length;
+  if(sansSat>0) alerts.push({type:'warn',msg:`${sansSat} bénéficiaire${sansSat>1?'s':''} sans questionnaire satisfaction`});
+  // Docs manquants
+  const sansDoc=state.benefs.filter(b=>b.statut==='En cours'&&(!b.evalI||!b.em)).length;
+  if(sansDoc>0) alerts.push({type:'info',msg:`${sansDoc} dossier${sansDoc>1?'s':''} avec documents manquants`});
+  // OK
+  const reclamOuvertes=state.reclamations.filter(r=>r.statut!=='Clôturé').length;
+  if(reclamOuvertes===0) alerts.push({type:'ok',msg:'Aucune réclamation ouverte'});
+  return alerts;
+}
+function renderAlerts(){
+  const strip=document.getElementById('alertStrip');
+  const alerts=computeAlerts();
+  strip.innerHTML=alerts.map(a=>`<button class="alert-chip chip-${a.type}" onclick="switchTab(${a.type==='ok'?0:a.type==='urgent'||a.type==='warn'?5:2})">
+    ${{urgent:'🔴',warn:'🟡',info:'🔵',ok:'🟢'}[a.type]} ${a.msg}</button>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 0 : DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard(){
+  // KPIs
+  const actifs=state.benefs.filter(b=>b.statut==='En cours').length;
+  const termines=state.benefs.filter(b=>b.statut==='Terminé').length;
+  const satNotes=state.sat.map(s=>s.note).filter(n=>n!=null);
+  const avgSat=satNotes.length?Math.round(satNotes.reduce((a,b)=>a+b,0)/satNotes.length*10)/10:0;
+  const actionsOuvertes=state.actions.filter(a=>a.statut!=='Clôturé').length;
+  const actionsRetard=state.actions.filter(a=>a.statut!=='Clôturé'&&daysFrom(a.echeance)<0).length;
+  let conformes=0,enCours=0,aTraiter=0,total=0;
+  for(const c of state.qualiopi){for(const i of c.indicators){total++;if(i.status==='conforme')conformes++;else if(i.status==='en_cours')enCours++;else aTraiter++;}}
+  const pctConf=Math.round(conformes/total*100);
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi blue"><div class="kpi-label">Bénéficiaires actifs</div><div class="kpi-val">${actifs}</div><div class="kpi-sub">${termines} terminé${termines>1?'s':''} cette année</div></div>
+    <div class="kpi green"><div class="kpi-label">Satisfaction moyenne</div><div class="kpi-val">${avgSat||'—'}<span style="font-size:14px">/10</span></div><div class="kpi-sub">${satNotes.length} réponse${satNotes.length>1?'s':''}</div></div>
+    <div class="kpi ${actionsRetard>0?'red':''}"><div class="kpi-label">Actions ouvertes</div><div class="kpi-val">${actionsOuvertes}</div><div class="kpi-sub">${actionsRetard>0?`⚠ ${actionsRetard} en retard`:'À jour'}</div></div>
+    <div class="kpi purple"><div class="kpi-label">Conf. Qualiopi</div><div class="kpi-val">${pctConf}%</div><div class="kpi-sub">${conformes}/${total} indicateurs</div></div>
+    <div class="kpi steel"><div class="kpi-label">Réclamations</div><div class="kpi-val">${state.reclamations.filter(r=>r.statut!=='Clôturé').length}</div><div class="kpi-sub">ouvertes · ${state.reclamations.length} au total</div></div>
+  `;
+  // Global progress
+  document.getElementById('globalPct').textContent=pctConf+'%';
+  document.getElementById('globalBar').style.width=pctConf+'%';
+  document.getElementById('critSummary').innerHTML=`
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-top:6px">
+      <span style="color:var(--green);font-weight:700">✓ ${conformes} conformes</span>
+      <span style="color:var(--orange);font-weight:700">⟳ ${enCours} en cours</span>
+      <span style="color:var(--red);font-weight:700">✗ ${aTraiter} à traiter</span>
+      <span style="color:var(--muted)">Audit surveillance : Janvier 2027</span>
+    </div>`;
+  // Alerts panel
+  const alerts=computeAlerts();
+  document.getElementById('alertsPanel').innerHTML=alerts.length?alerts.map(a=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.05)">
+      <span style="font-size:16px">${{urgent:'🔴',warn:'🟡',info:'🔵',ok:'🟢'}[a.type]}</span>
+      <span style="font-size:12px;color:${a.type==='urgent'?'var(--red)':a.type==='ok'?'var(--green)':'var(--text)'}">${a.msg}</span>
+    </div>`).join(''):'<p style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Aucune alerte active ✓</p>';
+  // Échéances
+  const now=new Date();
+  const echeances=[
+    {date:'2025-06-30',title:'Revue qualité T2 2025',desc:'Analyse satisfaction, réclamations, veille',type:'next'},
+    {date:'2025-07-31',title:'Envoi questionnaires à froid 2024',desc:'Bénéficiaires BC terminés depuis 6 mois',type:'warn'},
+    {date:'2025-09-30',title:'Revue qualité T3 2025',desc:'Analyse semestrielle + bilan indicateurs',type:'future'},
+    {date:'2025-12-31',title:'Revue qualité T4 2025 + Bilan annuel',desc:'Préparation rapport annuel qualité',type:'future'},
+    {date:'2026-06-30',title:'Revue qualité semestrielle 2026',desc:'Point intermédiaire avant audit',type:'future'},
+    {date:'2027-01-15',title:'🏁 Audit de surveillance Qualiopi',desc:'Bureau Veritas / organisme certificateur',type:'future'},
+  ].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  document.getElementById('echeancesTimeline').innerHTML=echeances.map(e=>{
+    const d=daysFrom(e.date);
+    const t=d<0?'past':d<15?'warn':d<60?'next':'future';
+    return`<div class="tl"><div class="tl-dot ${t}">${d<0?'✓':d<30?'!':'○'}</div><div class="tl-body"><div class="tl-date">${fmt(e.date)} ${d<0?'· Passé':d===0?'· Aujourd\'hui':`· J-${d}`}</div><div class="tl-title">${e.title}</div><div class="tl-desc">${e.desc}</div></div></div>`}).join('');
+  // Recent actions
+  const recent=state.actions.filter(a=>a.statut!=='Clôturé').sort((a,b)=>daysFrom(a.echeance)-daysFrom(b.echeance)).slice(0,4);
+  document.getElementById('recentActions').innerHTML=recent.map(a=>{
+    const d=daysFrom(a.echeance);
+    return`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:0.5px solid rgba(0,0,0,0.05)">
+      <span class="badge ${badgeStatus(a.priorite)}" style="flex-shrink:0;margin-top:1px">${a.priorite}</span>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--navy)">${a.action.slice(0,60)}${a.action.length>60?'…':''}</div>
+      <div style="font-size:10px;color:${d<0?'var(--red)':d<15?'var(--orange)':'var(--muted)'}">⏱ ${fmt(a.echeance)} ${d<0?'(retard!)':d<15?'(urgent)':''}</div></div></div>`}).join('')||'<p style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Toutes les actions sont à jour ✓</p>';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 1 : QUALIOPI
+// ═══════════════════════════════════════════════════════════
+function renderQualiopi(){
+  let totalConf=0,totalEnCours=0,totalATraiter=0;
+  for(const c of state.qualiopi){for(const i of c.indicators){if(i.status==='conforme')totalConf++;else if(i.status==='en_cours')totalEnCours++;else totalATraiter++;}}
+  document.getElementById('q-conforme-count').textContent=`${totalConf} Conformes`;
+  document.getElementById('q-encours-count').textContent=`${totalEnCours} En cours`;
+  document.getElementById('q-atraiter-count').textContent=`${totalATraiter} À traiter`;
+  document.getElementById('critList').innerHTML=state.qualiopi.map((c,ci)=>{
+    const conf=c.indicators.filter(i=>i.status==='conforme').length;
+    const total=c.indicators.length;
+    const pct=Math.round(conf/total*100);
+    const barColor=pct===100?'#16A34A':pct>=60?'#D97706':'#DC2626';
+    return`<div class="crit-item" id="crit-${ci}">
+      <div class="crit-header" onclick="toggleCrit(${ci})">
+        <div class="crit-badge" style="background:${c.color}">${c.id}</div>
+        <div class="crit-title-wrap">
+          <div class="crit-title">${c.label}</div>
+          <div class="crit-subtitle">${c.sub}</div>
+        </div>
+        <div class="crit-meta">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+          <span class="crit-pct" style="color:${barColor}">${pct}%</span>
+          <span class="badge ${pct===100?'badge-ok':pct>=60?'badge-warn':'badge-red'}">${conf}/${total}</span>
+        </div>
+        <span class="crit-chevron">▼</span>
+      </div>
+      <div class="indic-list">${c.indicators.map((ind,ii)=>`
+        <div class="indic-row">
+          <span class="indic-id">${ind.id}</span>
+          <div class="indic-body">
+            <div class="indic-label">${ind.label}</div>
+            <div class="indic-preuves">📎 ${ind.preuves}</div>
+          </div>
+          <div class="indic-actions">
+            <select class="form-select" style="width:120px;padding:3px 6px;font-size:11px" onchange="updateIndicStatus(${ci},${ii},this.value)">
+              <option value="conforme" ${ind.status==='conforme'?'selected':''}>✓ Conforme</option>
+              <option value="en_cours" ${ind.status==='en_cours'?'selected':''}>⟳ En cours</option>
+              <option value="a_traiter" ${ind.status==='a_traiter'?'selected':''}>✗ À traiter</option>
+            </select>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`}).join('');
+}
+function toggleCrit(i){document.getElementById('crit-'+i).classList.toggle('open');}
+async function updateIndicStatus(ci,ii,val){state.qualiopi[ci].indicators[ii].status=val;const indId=state.qualiopi[ci].indicators[ii].id;await db.from('qualiopi_statuts').upsert({indicateur_id:indId,statut:val,updated_at:new Date().toISOString()},{onConflict:'indicateur_id'});renderQualiopi();renderDashboard();renderAlerts();}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 2 : BÉNÉFICIAIRES
+// ═══════════════════════════════════════════════════════════
+function renderBenefTable(){
+  const filterType=document.getElementById('filterType')?.value||'';
+  const filterStatut=document.getElementById('filterStatut')?.value||'';
+  let list=state.benefs;
+  if(filterType) list=list.filter(b=>b.type===filterType);
+  if(filterStatut) list=list.filter(b=>b.statut===filterStatut);
+  const tbody=document.getElementById('benefTbody');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="12" class="tbl-empty">Aucun bénéficiaire trouvé</td></tr>';return;}
+  tbody.innerHTML=list.map(b=>`<tr>
+    <td style="font-weight:600;color:var(--navy)">${b.nom}</td>
+    <td><span class="badge ${b.type==='BC'?'badge-purple':'badge-blue'}">${b.type}</span></td>
+    <td>${fmt(b.debut)}</td>
+    <td style="color:${daysFrom(b.fin)<0&&b.statut==='En cours'?'var(--red)':'inherit'}">${fmt(b.fin)}</td>
+    <td><span class="badge ${badgeStatus(b.statut)}">${b.statut}</span></td>
+    <td>${chkHtml(b.conv)}</td>
+    <td>${chkHtml(b.em)}</td>
+    <td>${chkHtml(b.evalI)}</td>
+    <td>${chkHtml(b.evalF)}</td>
+    <td>${chkHtml(b.synth)}</td>
+    <td>${b.sat!=null?`<span style="font-weight:700;color:${b.sat>=8?'var(--green)':b.sat>=6?'var(--orange)':'var(--red)'}">${b.sat}/10</span>`:'<span class="badge badge-warn">En attente</span>'}</td>
+    <td><button class="icon-btn" onclick="deleteBenef(${b.id})" title="Supprimer">🗑</button></td>
+  </tr>`).join('');
+}
+async function addBenef(){
+  const nom=document.getElementById('bNom').value.trim();
+  const type=document.getElementById('bType').value;
+  const debut=document.getElementById('bDebut').value;
+  const fin=document.getElementById('bFin').value;
+  const fin2=document.getElementById('bFinancement').value;
+  if(!nom||!debut||!fin){alert('Veuillez remplir tous les champs obligatoires');return;}
+  const {data,error}=await db.from('benefs').insert({nom,type,debut,fin,statut:'En cours',financement:fin2,sat:null,conv:false,em:false,eval_i:false,eval_f:false,synth:false,preuves:{}}).select().single();
+  if(error){console.error(error);alert('Erreur de sauvegarde');return;}
+  state.benefs.push(mapBenef(data));
+  closeModal('modalBenef');renderBenefTable();renderDashboard();renderAlerts();
+  document.getElementById('bNom').value='';document.getElementById('bDebut').value='';document.getElementById('bFin').value='';
+}
+async function deleteBenef(id){if(confirm('Supprimer ce bénéficiaire ?')){await db.from('benefs').delete().eq('id',id);state.benefs=state.benefs.filter(b=>b.id!==id);renderBenefTable();renderDashboard();renderAlerts();}}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 3 : SATISFACTION
+// ═══════════════════════════════════════════════════════════
+let satBarInstance=null,satLineInstance=null;
+function renderSatisfaction(){
+  const notes=state.sat.map(s=>s.note).filter(n=>n!=null);
+  const avg=notes.length?Math.round(notes.reduce((a,b)=>a+b,0)/notes.length*10)/10:0;
+  const bc=state.sat.filter(s=>s.type==='BC').map(s=>s.note);
+  const fo=state.sat.filter(s=>s.type==='Formation').map(s=>s.note);
+  const avgBc=bc.length?Math.round(bc.reduce((a,b)=>a+b,0)/bc.length*10)/10:0;
+  const avgFo=fo.length?Math.round(fo.reduce((a,b)=>a+b,0)/fo.length*10)/10:0;
+  const dist=[0,0,0,0,0,0,0,0,0,0];
+  notes.forEach(n=>{if(n>=1&&n<=10)dist[n-1]++;});
+  const taux=notes.length?Math.round(notes.filter(n=>n>=7).length/notes.length*100):0;
+  document.getElementById('satCards').innerHTML=`
+    <div class="sat-card"><div class="sat-score">${avg||'—'}/10</div><div class="sat-label">Moyenne générale</div><div style="font-size:11px;color:var(--muted);margin-top:4px">${notes.length} réponse${notes.length>1?'s':''}</div></div>
+    <div class="sat-card"><div class="sat-score" style="color:var(--blue)">${taux}%</div><div class="sat-label">Taux de satisfaction ≥7</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Objectif : ≥ 80%</div></div>
+    <div class="sat-card"><div class="sat-score" style="color:var(--purple)">${avgBc||'—'}/10</div><div class="sat-label">Moyenne Bilan de Comp.</div><div style="font-size:11px;color:var(--muted);margin-top:4px">${bc.length} réponse${bc.length>1?'s':''}</div></div>
+    <div class="sat-card"><div class="sat-score" style="color:var(--steel)">${avgFo||'—'}/10</div><div class="sat-label">Moyenne Formation</div><div style="font-size:11px;color:var(--muted);margin-top:4px">${fo.length} réponse${fo.length>1?'s':''}</div></div>
+  `;
+  // Bar chart
+  const satBarCtx=document.getElementById('satBarChart');
+  if(satBarInstance){satBarInstance.destroy();satBarInstance=null;}
+  satBarInstance=new Chart(satBarCtx,{type:'bar',data:{
+    labels:['Bénéficiaires BC','Bénéficiaires Fo.','Financeurs','Commanditaires'],
+    datasets:[{label:'Taux satisfaction %',data:[avgBc*10||0,avgFo*10||0,100,85],backgroundColor:['#515276','#799BA5','#18478D','#D9A843'],borderRadius:4}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{font:{size:11}}}}}});
+  // Line chart
+  const satLineCtx=document.getElementById('satLineChart');
+  if(satLineInstance){satLineInstance.destroy();satLineInstance=null;}
+  satLineInstance=new Chart(satLineCtx,{type:'line',data:{
+    labels:['T1 2024','T2 2024','T3 2024','T4 2024','T1 2025'],
+    datasets:[
+      {label:'Bilan Compétences',data:[85,88,92,90,94],borderColor:'#515276',backgroundColor:'rgba(81,82,118,0.1)',tension:.3,fill:true,pointRadius:4},
+      {label:'Formation',data:[90,88,95,92,90],borderColor:'#D9A843',backgroundColor:'rgba(217,168,67,0.1)',tension:.3,fill:true,pointRadius:4}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:{y:{min:60,max:100,ticks:{callback:v=>v+'%'}}}}});
+  // Table
+  const tbody=document.getElementById('satTbody');
+  tbody.innerHTML=state.sat.length?state.sat.map(s=>`<tr>
+    <td>${fmt(s.date)}</td><td style="font-weight:600">${s.nom}</td>
+    <td><span class="badge ${s.type==='BC'?'badge-purple':'badge-blue'}">${s.type}</span></td>
+    <td><span style="font-size:16px;font-weight:800;color:${s.note>=8?'var(--green)':s.note>=6?'var(--orange)':'var(--red)'}">${s.note}/10</span></td>
+    <td style="color:var(--muted);font-size:11px">${s.comment||'—'}</td>
+    <td><button class="icon-btn" onclick="deleteSat(${s.id})">🗑</button></td>
+  </tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">Aucune réponse enregistrée</td></tr>';
+}
+async function addSat(){
+  const nom=document.getElementById('sNom').value.trim();
+  const note=parseFloat(document.getElementById('sNote').value);
+  const date=document.getElementById('sDate').value;
+  const type=document.getElementById('sType').value;
+  const comment=document.getElementById('sComment').value.trim();
+  if(!nom||isNaN(note)||!date){alert('Remplissez les champs obligatoires');return;}
+  const {data,error}=await db.from('satisfaction').insert({date,nom,type,note,comment}).select().single();
+  if(error){console.error(error);alert('Erreur de sauvegarde');return;}
+  state.sat.push(data);
+  const benef=state.benefs.find(b=>b.nom.toLowerCase().includes(nom.toLowerCase())&&b.type===type);
+  if(benef){benef.sat=note;await db.from('benefs').update({sat:note}).eq('id',benef.id);}
+  closeModal('modalSat');renderSatisfaction();renderDashboard();renderAlerts();
+  document.getElementById('sNom').value='';document.getElementById('sNote').value='';document.getElementById('sComment').value='';
+}
+async function deleteSat(id){if(confirm('Supprimer cette réponse ?')){await db.from('satisfaction').delete().eq('id',id);state.sat=state.sat.filter(s=>s.id!==id);renderSatisfaction();renderDashboard();}}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 4 : INCIDENTS
+// ═══════════════════════════════════════════════════════════
+function renderIncidents(){
+  const rTbody=document.getElementById('reclamTbody');
+  rTbody.innerHTML=state.reclamations.length?state.reclamations.map(r=>`<tr>
+    <td>${fmt(r.date)}</td><td>${r.emetteur}</td>
+    <td style="font-size:11px;max-width:140px">${r.objet}</td>
+    <td><span class="badge ${badgeStatus(r.gravite)}">${r.gravite}</span></td>
+    <td><span class="badge ${badgeStatus(r.statut)}">${r.statut}</span></td>
+    <td><button class="icon-btn" onclick="deleteReclam(${r.id})">🗑</button></td>
+  </tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">✓ Aucune réclamation</td></tr>';
+  const iTbody=document.getElementById('incidentTbody');
+  iTbody.innerHTML=state.incidents.length?state.incidents.map(i=>`<tr>
+    <td>${fmt(i.date)}</td><td><span class="badge badge-warn">${i.type}</span></td>
+    <td style="font-size:11px;max-width:140px">${i.desc}</td>
+    <td><span class="badge ${badgeStatus(i.impact)}">${i.impact}</span></td>
+    <td><span class="badge ${badgeStatus(i.statut)}">${i.statut}</span></td>
+    <td><button class="icon-btn" onclick="deleteIncident(${i.id})">🗑</button></td>
+  </tr>`).join(''):'<tr><td colspan="6" class="tbl-empty">✓ Aucun incident</td></tr>';
+}
+async function addReclam(){
+  const date=document.getElementById('rDate').value;const objet=document.getElementById('rObjet').value.trim();
+  if(!date||!objet){alert('Remplissez les champs obligatoires');return;}
+  const row={date,emetteur:document.getElementById('rEmetteur').value,objet,gravite:document.getElementById('rGravite').value,statut:document.getElementById('rStatut').value,action:document.getElementById('rAction').value.trim()};
+  const {data,error}=await db.from('reclamations').insert(row).select().single();
+  if(error){console.error(error);alert('Erreur de sauvegarde');return;}
+  state.reclamations.push(data);
+  closeModal('modalReclam');renderIncidents();renderDashboard();renderAlerts();
+  document.getElementById('rObjet').value='';document.getElementById('rAction').value='';
+}
+async function addIncident(){
+  const date=document.getElementById('iDate').value;const desc=document.getElementById('iDesc').value.trim();
+  if(!date||!desc){alert('Remplissez les champs obligatoires');return;}
+  const row={date,type:document.getElementById('iType').value,description:desc,impact:document.getElementById('iImpact').value,statut:document.getElementById('iStatut').value,action:document.getElementById('iAction').value.trim()};
+  const {data,error}=await db.from('incidents').insert(row).select().single();
+  if(error){console.error(error);alert('Erreur de sauvegarde');return;}
+  state.incidents.push({...data,desc:data.description});
+  closeModal('modalIncident');renderIncidents();renderDashboard();renderAlerts();
+  document.getElementById('iDesc').value='';document.getElementById('iAction').value='';
+}
+async function deleteReclam(id){if(confirm('Supprimer ?')){await db.from('reclamations').delete().eq('id',id);state.reclamations=state.reclamations.filter(r=>r.id!==id);renderIncidents();renderDashboard();renderAlerts();}}
+async function deleteIncident(id){if(confirm('Supprimer ?')){await db.from('incidents').delete().eq('id',id);state.incidents=state.incidents.filter(i=>i.id!==id);renderIncidents();}}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 5 : ACTIONS
+// ═══════════════════════════════════════════════════════════
+function renderActionsTable(){
+  const filterStatut=document.getElementById('filterActionStatut')?.value||'';
+  let list=state.actions;
+  if(filterStatut) list=list.filter(a=>a.statut===filterStatut);
+  list=list.sort((a,b)=>{const pa={'Haute':0,'Normale':1,'Basse':2};return(pa[a.priorite]||1)-(pa[b.priorite]||1)||new Date(a.echeance)-new Date(b.echeance);});
+  // KPIs
+  const total=state.actions.length;
+  const ouvert=state.actions.filter(a=>a.statut==='Ouvert').length;
+  const enCours=state.actions.filter(a=>a.statut==='En cours').length;
+  const cloture=state.actions.filter(a=>a.statut==='Clôturé').length;
+  const retard=state.actions.filter(a=>a.statut!=='Clôturé'&&daysFrom(a.echeance)<0).length;
+  document.getElementById('actionKpis').innerHTML=`
+    <div class="kpi blue"><div class="kpi-label">Total actions</div><div class="kpi-val">${total}</div></div>
+    <div class="kpi"><div class="kpi-label">Ouvertes</div><div class="kpi-val">${ouvert}</div></div>
+    <div class="kpi purple"><div class="kpi-label">En cours</div><div class="kpi-val">${enCours}</div></div>
+    <div class="kpi green"><div class="kpi-label">Clôturées</div><div class="kpi-val">${cloture}</div><div class="kpi-sub">${total>0?Math.round(cloture/total*100):0}% du plan</div></div>
+    <div class="kpi ${retard>0?'red':'green'}"><div class="kpi-label">En retard</div><div class="kpi-val">${retard}</div></div>
+  `;
+  const tbody=document.getElementById('actionsTbody');
+  tbody.innerHTML=list.length?list.map(a=>{
+    const d=daysFrom(a.echeance);
+    const retard=a.statut!=='Clôturé'&&d<0;
+    return`<tr>
+      <td><span class="badge badge-gray">${a.source}</span></td>
+      <td style="font-size:11px">${fmt(a.date)}</td>
+      <td style="font-size:12px;max-width:200px;font-weight:${retard?'700':'400'};color:${retard?'var(--red)':'inherit'}">${a.action}</td>
+      <td style="font-size:11px">${a.responsable||'M. Vitré'}</td>
+      <td style="font-size:11px;color:${retard?'var(--red)':d<15&&a.statut!=='Clôturé'?'var(--orange)':'inherit'};font-weight:${retard?'700':'400'}">${fmt(a.echeance)}${retard?' ⚠':''}</td>
+      <td><span class="badge ${badgeStatus(a.priorite)}">${a.priorite}</span></td>
+      <td><select class="form-select" style="padding:3px 6px;font-size:11px;width:105px" onchange="updateActionStatut(${a.id},this.value)">
+        <option ${a.statut==='Ouvert'?'selected':''}>Ouvert</option>
+        <option ${a.statut==='En cours'?'selected':''}>En cours</option>
+        <option ${a.statut==='Clôturé'?'selected':''}>Clôturé</option>
+      </select></td>
+      <td><button class="icon-btn" onclick="deleteAction(${a.id})">🗑</button></td>
+    </tr>`}).join(''):'<tr><td colspan="8" class="tbl-empty">Aucune action</td></tr>';
+}
+async function updateActionStatut(id,val){const a=state.actions.find(x=>x.id===id);if(a){a.statut=val;await db.from('actions').update({statut:val}).eq('id',id);renderActionsTable();renderDashboard();renderAlerts();}}
+async function addAction(){
+  const action=document.getElementById('aAction').value.trim();
+  const date=document.getElementById('aDate').value;
+  const echeance=document.getElementById('aEcheance').value;
+  if(!action||!date||!echeance){alert('Remplissez les champs obligatoires');return;}
+  const row={source:document.getElementById('aSource').value,date,action,responsable:'M. Vitré',echeance,priorite:document.getElementById('aPriorite').value,statut:document.getElementById('aStatut').value};
+  const {data,error}=await db.from('actions').insert(row).select().single();
+  if(error){console.error(error);alert('Erreur de sauvegarde');return;}
+  state.actions.push(data);
+  closeModal('modalAction');renderActionsTable();renderDashboard();renderAlerts();
+  document.getElementById('aAction').value='';document.getElementById('aDate').value='';document.getElementById('aEcheance').value='';
+}
+async function deleteAction(id){if(confirm('Supprimer cette action ?')){await db.from('actions').delete().eq('id',id);state.actions=state.actions.filter(a=>a.id!==id);renderActionsTable();renderDashboard();renderAlerts();}}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 6 : CALENDRIER
+// ═══════════════════════════════════════════════════════════
+function renderCalendrier(){
+  const revues=[
+    {date:'2025-03-31',title:'Revue qualité T1 2025',desc:'Analyse satisfaction, bilan formation',type:'done'},
+    {date:'2025-06-30',title:'Revue qualité T2 2025',desc:'Réclamations, veille, indicateurs',type:'next'},
+    {date:'2025-09-30',title:'Revue qualité T3 2025',desc:'Bilan semestriel, plan actions',type:'future'},
+    {date:'2025-12-31',title:'Revue qualité T4 2025 + Bilan annuel',desc:'Rapport annuel qualité Qualiopi',type:'future'},
+    {date:'2026-03-31',title:'Revue qualité T1 2026',desc:'Préparation dossier audit',type:'future'},
+    {date:'2026-06-30',title:'Revue qualité T2 2026',desc:'Bilan semestriel pré-audit',type:'future'},
+    {date:'2026-09-30',title:'Revue qualité T3 2026',desc:'Finalisation dossier audit',type:'future'},
+    {date:'2026-12-31',title:'Revue qualité T4 2026 + Simulation audit',desc:'Audit blanc interne',type:'future'},
+  ];
+  const jalons=[
+    {date:'2025-04-09',title:'✅ Certification Qualiopi obtenue',desc:'BC + Actions de formation — Organisme : Bureau Veritas',type:'done'},
+    {date:'2025-06-30',title:'Mise à jour programme BC V2025',desc:'Intégration retours auditeur',type:'next'},
+    {date:'2025-09-30',title:'Publication des indicateurs de résultats',desc:'Taux satisfaction, taux abandon — diffusion partenaires',type:'future'},
+    {date:'2025-12-31',title:'Rapport annuel qualité 2025',desc:'Synthèse indicateurs, satisfaction, améliorations',type:'future'},
+    {date:'2026-06-30',title:'Dossier préparation audit',desc:'Constitution preuves, mise à jour documents',type:'future'},
+    {date:'2026-10-01',title:'Auto-évaluation pré-audit',desc:'Grille auto-évaluation Qualiopi 32 indicateurs',type:'future'},
+    {date:'2027-01-15',title:'🏁 Audit de surveillance Qualiopi',desc:'Renouvellement certification — Janvier 2027',type:'future'},
+  ];
+  document.getElementById('revuesTimeline').innerHTML=revues.map(e=>`<div class="tl">
+    <div class="tl-dot ${e.type}">${e.type==='done'?'✓':e.type==='next'?'►':'○'}</div>
+    <div class="tl-body"><div class="tl-date">${fmt(e.date)}</div><div class="tl-title">${e.title}</div><div class="tl-desc">${e.desc}</div></div>
+  </div>`).join('');
+  document.getElementById('jalonsTimeline').innerHTML=jalons.map(e=>`<div class="tl">
+    <div class="tl-dot ${e.type}">${e.type==='done'?'✓':e.type==='next'?'!':'○'}</div>
+    <div class="tl-body"><div class="tl-date">${fmt(e.date)}</div><div class="tl-title">${e.title}</div><div class="tl-desc">${e.desc}</div></div>
+  </div>`).join('');
+  const checklist=[
+    '📋 Analyser les questionnaires de satisfaction reçus','📊 Calculer les indicateurs (taux satisfaction, abandon, insertion)',
+    '⚠️ Examiner les réclamations et incidents du trimestre','🔧 Évaluer l\'efficacité des actions correctives en cours',
+    '📰 Intégrer les résultats de la veille légale et pédagogique','📁 Mettre à jour le tableau des actions d\'amélioration',
+    '✅ Vérifier la conformité des dossiers bénéficiaires','📅 Programmer la prochaine revue qualité (Google Calendar)',
+    '📝 Rédiger le compte-rendu de la revue','📨 Envoyer questionnaires en attente (satisfaction, à froid)',
+  ];
+  document.getElementById('checklistRevue').innerHTML=checklist.map((item,i)=>`
+    <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px;border-radius:6px;border:0.5px solid var(--border);background:white">
+      <input type="checkbox" id="chk${i}" style="margin-top:2px;accent-color:var(--gold)">
+      <span style="font-size:12px;color:var(--text)">${item}</span>
+    </label>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 7 : DOCUMENTS
+// ═══════════════════════════════════════════════════════════
+function renderDocuments(){
+  const search=(document.getElementById('docSearch')?.value||'').toLowerCase();
+  const filterQ=document.getElementById('filterQ')?.value||'';
+  const filterBrand=document.getElementById('filterBrand')?.value||'';
+
+  const ALL_DOCS=[
+    // ── 📋 ADMINISTRATION & CONTRACTUALISATION ──────────────────────────────────────
+    {cat:'📋 Administration & Contractualisation',catColor:'#18478D',icon:'📄',name:'Contrat de formation professionnelle',ref:'CONT-FORM-01',ver:'V2026',qualiopi:'I4,I6',status:'conforme',branded:true,file:'15_Contrat_de_Formation_V2026.docx'},
+    {cat:'📋 Administration & Contractualisation',catColor:'#18478D',icon:'📄',name:'Convention de formation (entreprise)',ref:'CONV-FORM-01',ver:'V2026',qualiopi:'I4,I7',status:'conforme',branded:true,file:'16_Convention_de_Formation_V2026.docx'},
+    {cat:'📋 Administration & Contractualisation',catColor:'#18478D',icon:'📋',name:'Règlement intérieur distanciel',ref:'RI-DIST-01',ver:'V2026',qualiopi:'I3,I8',status:'conforme',branded:true,file:'11_Règlement_Intérieur_Distanciel.docx'},
+    {cat:'📋 Administration & Contractualisation',catColor:'#18478D',icon:'📜',name:'Charte de déontologie',ref:'CHARTE-DEON-01',ver:'V2026',qualiopi:'I4,I8',status:'conforme',branded:true,file:'08_Charte_Déontologie.docx'},
+    {cat:'📋 Administration & Contractualisation',catColor:'#18478D',icon:'📗',name:'Livret d\'accueil Bilan de Compétences',ref:'LIVRET-BC-01',ver:'V2026',qualiopi:'I1,I3',status:'conforme',branded:true,file:'23_Livret_Accueil_BC_V2026.docx'},
+    {cat:'📋 Administration & Contractualisation',catColor:'#18478D',icon:'🤝',name:'Charte engagement qualité sous-traitant',ref:'CHARTE-ST-01',ver:'V2026',qualiopi:'I16,I21',status:'conforme',branded:true,file:'09_Charte_Sous-traitant_Qualiopi.docx'},
+    // ── 🎓 PÉDAGOGIE BILAN DE COMPÉTENCES ──────────────────────────────────────
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'📘',name:'Programme BC V2026 (EDOF-optimisé)',ref:'PROG-BC-01',ver:'V2026 EDOF',qualiopi:'I1,I5,I6',status:'conforme',branded:true,file:'13_Programme_BC_V2026_EDOF.docx'},
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'🔍',name:'Guide entretien préalable BC',ref:'GUIDE-BC-01',ver:'V2026',qualiopi:'I4,I5,I6',status:'conforme',branded:true,file:'18_Guide_Entretien_Préalable_BC_V2026.docx'},
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'📋',name:'Fiche de suivi formation / BC',ref:'SUIVI-BC-01',ver:'V2026',qualiopi:'I13,I9,I10',status:'conforme',branded:true,file:'12_Fiche_Suivi_Formation_BC.docx'},
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'✍️',name:'Feuille d\'émargement',ref:'EMAR-01',ver:'V2026',qualiopi:'I13',status:'conforme',branded:true,file:'17_Feuille_Émargement_V2026.docx'},
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'✅',name:'Grille d\'évaluation BC (3 domaines)',ref:'EVAL-BC-01',ver:'V2026',qualiopi:'I9,I10',status:'conforme',branded:true,file:'19_Grille_Évaluation_BC_V2026.docx'},
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'📝',name:'Document de synthèse BC (template)',ref:'SYNTH-BC-01',ver:'V2026',qualiopi:'I11',status:'conforme',branded:true,file:'24_Document_Synthèse_BC_V2026_Template.docx'},
+    {cat:'🎓 Pédagogie — Bilan de Compétences',catColor:'#515276',icon:'🎓',name:'Attestation de réalisation de formation',ref:'ATTEST-FORM-01',ver:'V2026',qualiopi:'I11',status:'conforme',branded:true,file:'25_Attestation_Réalisation_Formation_V2026.docx'},
+    // ── 🔧 PÉDAGOGIE FORMATION SOFT SKILLS ─────────────────────────────────────────────
+    {cat:'🔧 Pédagogie — Formation Soft Skills',catColor:'#799BA5',icon:'📘',name:'Programme Soft Skills V2026 (EDOF-optimisé)',ref:'PROG-SS-01',ver:'V2026 EDOF',qualiopi:'I1,I5,I6',status:'conforme',branded:true,file:'14_Programme_Formation_Soft_Skills_V2026_EDOF.docx'},
+    {cat:'🔧 Pédagogie — Formation Soft Skills',catColor:'#799BA5',icon:'📝',name:'Évaluation initiale Soft Skills',ref:'EVAL-INIT-SS',ver:'V2026',qualiopi:'I9',status:'conforme',branded:false,file:''},
+    {cat:'🔧 Pédagogie — Formation Soft Skills',catColor:'#799BA5',icon:'📝',name:'Évaluation finale Soft Skills',ref:'EVAL-FIN-SS',ver:'V2026',qualiopi:'I10',status:'conforme',branded:false,file:''},
+    // ── 😊 SATISFACTION & RÉCLAMATIONS ──────────────────────────────────────
+    {cat:'😊 Satisfaction & Réclamations',catColor:'#D9A843',icon:'😊',name:'Questionnaire satisfaction bénéficiaires (à chaud)',ref:'QUEST-SAT-01',ver:'V2026',qualiopi:'I26,I30',status:'conforme',branded:true,file:'04_Questionnaire_Satisfaction_Bénéficiaires.docx'},
+    {cat:'😊 Satisfaction & Réclamations',catColor:'#D9A843',icon:'❄️',name:'Questionnaire satisfaction à froid (M+6)',ref:'QUEST-FROID-01',ver:'V2026',qualiopi:'I26,I30',status:'conforme',branded:true,file:'20_Questionnaire_Satisfaction_Froid_M6_V2026.docx'},
+    {cat:'😊 Satisfaction & Réclamations',catColor:'#D9A843',icon:'🏢',name:'Questionnaire satisfaction commanditaire',ref:'QUEST-SAT-02',ver:'V2026',qualiopi:'I27,I30',status:'conforme',branded:true,file:'05_Questionnaire_Satisfaction_Commanditaire.docx'},
+    {cat:'😊 Satisfaction & Réclamations',catColor:'#D9A843',icon:'💰',name:'Questionnaire satisfaction financeurs',ref:'QUEST-SAT-03',ver:'V2026',qualiopi:'I27,I30',status:'conforme',branded:true,file:'06_Questionnaire_Satisfaction_Financeurs.docx'},
+    {cat:'😊 Satisfaction & Réclamations',catColor:'#D9A843',icon:'⚠️',name:'Tableau suivi traitement réclamations',ref:'TAB-RECLAM-01',ver:'V2026',qualiopi:'I30,I29',status:'conforme',branded:false,file:''},
+    {cat:'😊 Satisfaction & Réclamations',catColor:'#D9A843',icon:'📒',name:'Registre des incidents et aléas',ref:'REG-INC-01',ver:'V2026',qualiopi:'I30',status:'conforme',branded:false,file:''},
+    // ── 📈 PILOTAGE & AMÉLIORATION CONTINUE ──────────────────────────────────────────
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'🏆',name:'Manuel Qualité MaïeutiCap V2026',ref:'MQ-QUAL-01',ver:'V2026',qualiopi:'Critères 1-7',status:'conforme',branded:true,file:'00_Manuel_Qualité_MaïeutiCap_V2026.docx'},
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'🗺️',name:'Cartographie des processus qualité',ref:'PROC-CART-01',ver:'V2026',qualiopi:'Critères 1-7',status:'conforme',branded:true,file:'22_Cartographie_Processus_Qualité_V2026.docx'},
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'✅',name:'Grille auto-évaluation Qualiopi 32 indicateurs',ref:'AUTO-EVAL-01',ver:'V2026',qualiopi:'I31',status:'conforme',branded:true,file:'26_Grille_Auto_Évaluation_Qualiopi_32_Indicateurs_V2026.docx'},
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'📋',name:'Procédure réclamations / satisfaction / aléas',ref:'PROC-QUAL-01',ver:'V2026',qualiopi:'I29,I30,I31',status:'conforme',branded:true,file:'01_Procédure_Réclamations_Satisfaction_Aléas.docx'},
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'📋',name:'Procédure gestion des abandons',ref:'PROC-QUAL-02',ver:'V2026',qualiopi:'I12,I29',status:'conforme',branded:true,file:'02_Procédure_Gestion_Abandons.docx'},
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'📝',name:'Formulaire d\'abandon',ref:'FORM-04',ver:'V2026',qualiopi:'I12',status:'conforme',branded:true,file:'03_Formulaire_Abandon.docx'},
+    {cat:'📈 Pilotage & Amélioration continue',catColor:'#232E4F',icon:'🔧',name:'Tableau suivi actions d\'amélioration',ref:'TAB-AMEL-01',ver:'V2026',qualiopi:'I29,I31',status:'conforme',branded:false,file:''},
+    // ── 📧 MODÈLES DE MAILS ──────────────────────────────────────────────────
+    {cat:'📧 Modèles de mails',catColor:'#059669',icon:'✉️',name:'5 modèles de mails qualité (recueil)',ref:'MAIL-01à05',ver:'V2026',qualiopi:'I3,I27,I30',status:'conforme',branded:true,file:'10_Modèles_Mails_Qualité.docx'},
+    // ── 🔍 VEILLE & DÉVELOPPEMENT ───────────────────────────────────────────
+    {cat:'🔍 Veille & Développement des compétences',catColor:'#0F766E',icon:'🔍',name:'Procédure de veille stratégique',ref:'PROC-VEILLE-01',ver:'V2026',qualiopi:'I17,I18',status:'conforme',branded:true,file:'29_Procédure_Veille_Stratégique_V2026.docx'},
+    {cat:'🔍 Veille & Développement des compétences',catColor:'#0F766E',icon:'📈',name:'Plan de développement des compétences 2026',ref:'PDC-2026',ver:'V2026',qualiopi:'I19,I20',status:'conforme',branded:true,file:'28_Plan_Développement_Compétences_V2026.docx'},
+    {cat:'🔍 Veille & Développement des compétences',catColor:'#0F766E',icon:'⭐',name:'Grille évaluation du formateur (auto-éval.)',ref:'EVAL-FORM-01',ver:'V2026',qualiopi:'I19,I28',status:'conforme',branded:true,file:'07_Évaluation_Formateur.docx'},
+    // ── ♿ HANDICAP & ACCESSIBILITÉ ─────────────────────────────────────────
+    {cat:'♿ Handicap & Accessibilité (PSH)',catColor:'#D97706',icon:'♿',name:'Adaptations handicap & accessibilité PSH',ref:'ADAPT-PSH-01',ver:'V2026',qualiopi:'I12,I23,I25',status:'conforme',branded:true,file:'30_Adaptations_Handicap_PSH_V2026.docx'},
+    {cat:'♿ Handicap & Accessibilité (PSH)',catColor:'#D97706',icon:'📝',name:'Questionnaire PSH (bénéficiaire)',ref:'QUEST-PSH',ver:'V2026',qualiopi:'I12,I23',status:'conforme',branded:false,file:''},
+    // ── 🤝 COMMANDITAIRES & PARTENARIATS ─────────────────────────────────────────
+    {cat:'🤝 Commanditaires & Partenariats',catColor:'#7C3AED',icon:'📊',name:'Analyse des besoins commanditaire',ref:'ANAL-BES-CMD-01',ver:'V2026',qualiopi:'I7',status:'conforme',branded:true,file:'27_Analyse_Besoins_Commanditaire_V2026.docx'},
+    // ── 👤 RESSOURCES HUMAINES ────────────────────────────────────────────────
+    {cat:'👤 Ressources Humaines & Organisation',catColor:'#6B21A8',icon:'👤',name:'Fiche de poste multi-missions (Dirigeante/Consultante)',ref:'FP-MULTI-01',ver:'V2026',qualiopi:'I15,I16',status:'conforme',branded:true,file:'21_Fiche_Poste_Dirigeante_Consultante_BC_V2026.docx'},
+  ];
+
+  let filtered=ALL_DOCS.filter(d=>{
+    const matchSearch=!search||(d.name+d.ref+d.qualiopi).toLowerCase().includes(search);
+    const matchQ=!filterQ||d.qualiopi.includes(filterQ);
+    const matchBrand=!filterBrand||(filterBrand==='yes'&&d.branded)||(filterBrand==='no'&&!d.branded);
+    return matchSearch&&matchQ&&matchBrand;
+  });
+
+  const total=ALL_DOCS.length;
+  const branded=ALL_DOCS.filter(d=>d.branded).length;
+  const conformes=ALL_DOCS.filter(d=>d.status==='conforme').length;
+  const enCours=ALL_DOCS.filter(d=>d.status==='en_cours').length;
+
+  const cats={};
+  filtered.forEach(d=>{
+    if(!cats[d.cat]) cats[d.cat]={color:d.catColor,docs:[]};
+    cats[d.cat].docs.push(d);
+  });
+
+  document.getElementById('docLibrary').innerHTML=`
+    <div class="doc-stats-bar">
+      <div class="doc-stat"><span class="doc-stat-num">${total}</span> documents au total</div>
+      <div class="doc-stat" style="border-color:var(--gold)">⭐ <span class="doc-stat-num" style="color:#92400E">${branded}</span> uniformisés charte V2026</div>
+      <div class="doc-stat" style="border-color:var(--green)"><span class="doc-stat-num" style="color:var(--green)">${conformes}</span> conformes Qualiopi</div>
+      <div class="doc-stat" style="border-color:var(--orange)"><span class="doc-stat-num" style="color:var(--orange)">${enCours}</span> en cours</div>
+      <div class="doc-stat" style="border-color:var(--purple)"><span class="doc-stat-num" style="color:var(--purple)">${Object.keys(cats).length}</span> catégories</div>
+    </div>
+    ${Object.entries(cats).map(([catName,cat])=>`
+    <div class="doc-category">
+      <div class="doc-cat-title" style="background:${cat.color}18;border-left:4px solid ${cat.color};color:${cat.color}" onclick="toggleCatDoc(this)">
+        <span>${catName}</span>
+        <span style="margin-left:8px;font-size:10px;font-weight:400;color:${cat.color}99">${cat.docs.filter(d=>d.status==='conforme').length}/${cat.docs.length} conformes · ${cat.docs.filter(d=>d.branded).length} ⭐ uniformisés</span>
+        <span class="doc-cat-toggle">▼</span>
+      </div>
+      <div class="doc-cat-body">
+        <table class="doc-table">
+          <thead><tr>
+            <th style="width:30px">#</th>
+            <th>Document</th>
+            <th>Réf.</th>
+            <th>Version</th>
+            <th>Indicateurs Qualiopi</th>
+            <th>Conformité</th>
+            <th>Charte</th>
+            <th>Télécharger</th>
+          </tr></thead>
+          <tbody>${cat.docs.map((d,i)=>`
+            <tr>
+              <td style="color:var(--muted);text-align:center;font-size:13px">${d.icon}</td>
+              <td style="font-weight:600;color:var(--navy)">${d.name}</td>
+              <td style="font-size:10px;color:var(--muted);font-family:monospace">${d.ref}</td>
+              <td><span class="badge badge-gray" style="font-size:10px">${d.ver}</span></td>
+              <td>${d.qualiopi.split(',').map(q=>`<span class="qualiopi-tag">${q.trim()}</span>`).join(' ')}</td>
+              <td><span class="badge ${d.status==='conforme'?'badge-ok':d.status==='en_cours'?'badge-warn':'badge-red'}">${d.status==='conforme'?'✓ Conforme':d.status==='en_cours'?'⟳ En cours':'✗ À traiter'}</span></td>
+              <td>${d.branded?'<span class="doc-branded">⭐ V2026</span>':'<span style="color:#CBD5E0;font-size:10px">—</span>'}</td>
+              <td>${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`).join('')}
+  `;
+}
+
+function toggleCatDoc(el){
+  const body=el.nextElementSibling;
+  body.classList.toggle('collapsed');
+  el.querySelector('.doc-cat-toggle').textContent=body.classList.contains('collapsed')?'▶':'▼';
+}
+
+function dlDoc(filename){
+  const modal=document.getElementById('modalDocOpen');
+  const nameEl=document.getElementById('docOpenName');
+  if(nameEl) nameEl.textContent=filename;
+  if(modal) modal.classList.add('show');
+}
+
+function copyDocName(){
+  const name=document.getElementById('docOpenName')?.textContent||'';
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(name).then(()=>{
+      const btn=document.getElementById('copyDocBtn');
+      if(btn){btn.textContent='✓ Copié !';setTimeout(()=>btn.textContent='📋 Copier le nom du fichier',2000);}
+    });
+  }
+}
+  if(modal) modal.classList.add('show');
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  TAB 8 : PREUVES PAR BÉNÉFICIAIRE
+// ═══════════════════════════════════════════════════════════
+const PREUVES_BC = [
+  {section:'Phase 0 — Avant démarrage',items:[
+    {key:'entretienPrealab',label:'Entretien préalable réalisé',ref:'GUIDE-BC-01',qualiopi:'I4',obligatoire:true},
+    {key:'contratSigne',label:'Contrat de formation signé',ref:'CONT-FORM-01',qualiopi:'I4',obligatoire:true},
+    {key:'livretRemis',label:'Livret d\'accueil remis',ref:'LIVRET-BC-01',qualiopi:'I1,I3',obligatoire:true},
+    {key:'riSigne',label:'Règlement intérieur signé',ref:'RI-DIST-01',qualiopi:'I3',obligatoire:true},
+    {key:'pshQuestionnaire',label:'Questionnaire PSH remis',ref:'QUEST-PSH',qualiopi:'I12,I23',obligatoire:false,tooltip:'Si bénéficiaire PSH uniquement'},
+  ]},
+  {section:'Phase 1 — Phase préliminaire',items:[
+    {key:'phasePrelim',label:'Feuille d\'émargement Ph. préliminaire',ref:'EMAR-01',qualiopi:'I13',obligatoire:true},
+    {key:'grilleEvalI',label:'Grille d\'évaluation initiale complétée',ref:'EVAL-BC-01',qualiopi:'I9',obligatoire:true},
+  ]},
+  {section:'Phase 2 — Phase d\'investigation',items:[
+    {key:'phaseInvest1',label:'Émargement investigation (séances 1-4)',ref:'EMAR-01',qualiopi:'I13',obligatoire:true},
+    {key:'phaseInvest2',label:'Émargement investigation (séances 5-8)',ref:'EMAR-01',qualiopi:'I13',obligatoire:true},
+  ]},
+  {section:'Phase 3 — Phase de conclusion',items:[
+    {key:'phaseConclus',label:'Émargement phase de conclusion',ref:'EMAR-01',qualiopi:'I13',obligatoire:true},
+    {key:'grilleEvalF',label:'Grille d\'évaluation finale complétée',ref:'EVAL-BC-01',qualiopi:'I10',obligatoire:true},
+    {key:'synthese',label:'Document de synthèse co-rédigé et remis',ref:'SYNTH-BC-01',qualiopi:'I11',obligatoire:true},
+    {key:'attestation',label:'Attestation de réalisation remise',ref:'ATTEST-FORM-01',qualiopi:'I11',obligatoire:true},
+  ]},
+  {section:'Post-formation — Satisfaction',items:[
+    {key:'satChaud',label:'Questionnaire satisfaction à chaud (fin de prestation)',ref:'QUEST-SAT-01',qualiopi:'I26,I30',obligatoire:true},
+    {key:'satFroid',label:'Questionnaire satisfaction à froid (M+6)',ref:'QUEST-FROID-01',qualiopi:'I26,I30',obligatoire:true},
+  ]},
+];
+
+const PREUVES_FORM = [
+  {section:'Avant démarrage',items:[
+    {key:'conventionSignee',label:'Convention de formation signée',ref:'CONV-FORM-01',qualiopi:'I4,I7',obligatoire:true},
+    {key:'riSigne',label:'Règlement intérieur signé',ref:'RI-DIST-01',qualiopi:'I3',obligatoire:true},
+    {key:'livretRemis',label:'Programme transmis au bénéficiaire',ref:'PROG-SS-01',qualiopi:'I5',obligatoire:true},
+  ]},
+  {section:'Pendant la formation',items:[
+    {key:'evalInitiale',label:'Évaluation initiale / positionnement',ref:'EVAL-INIT-SS',qualiopi:'I9',obligatoire:true},
+    {key:'emargement1',label:'Feuilles d\'émargement séances 1-3',ref:'EMAR-01',qualiopi:'I13',obligatoire:true},
+    {key:'emargement2',label:'Feuilles d\'émargement séances 4-6',ref:'EMAR-01',qualiopi:'I13',obligatoire:false},
+    {key:'evalFormative',label:'Évaluations formatives / quiz de validation',ref:'EVAL-FIN-SS',qualiopi:'I9,I10',obligatoire:true},
+  ]},
+  {section:'Fin de formation',items:[
+    {key:'planAction',label:'Plan d\'action individuel validé',ref:'EVAL-FIN-SS',qualiopi:'I10',obligatoire:true},
+    {key:'attestation',label:'Attestation de formation remise',ref:'ATTEST-FORM-01',qualiopi:'I11',obligatoire:true},
+    {key:'satChaud',label:'Questionnaire satisfaction à chaud',ref:'QUEST-SAT-01',qualiopi:'I26,I30',obligatoire:true},
+    {key:'satFroid',label:'Questionnaire satisfaction à froid (M+3)',ref:'QUEST-FROID-01',qualiopi:'I26,I30',obligatoire:false},
+  ]},
+];
+
+function getPreuvesDef(type){return type==='BC'?PREUVES_BC:PREUVES_FORM;}
+
+function calcProofPct(benef){
+  const def=getPreuvesDef(benef.type);
+  const preuves=benef.preuves||{};
+  let total=0,done=0;
+  def.forEach(sec=>sec.items.forEach(item=>{
+    if(item.obligatoire){total++;if(preuves[item.key]&&preuves[item.key]!==false)done++;}
+  }));
+  return total>0?Math.round(done/total*100):0;
+}
+
+function toggleProof(benefId,key,val){
+  const b=state.benefs.find(x=>x.id===benefId);
+  if(!b) return;
+  if(!b.preuves) b.preuves={};
+  b.preuves[key]=val;
+  saveState();
+  renderProofs();
+}
+
+async function updateProofDate(benefId,key,dateVal){
+  const b=state.benefs.find(x=>x.id===benefId);
+  if(!b) return;
+  if(!b.preuves) b.preuves={};
+  b.preuves[key]=dateVal||false;
+  await db.from('benefs').update({preuves:b.preuves}).eq('id',benefId);
+  // Only re-render the KPI bar for this benef (not full re-render to avoid losing focus)
+  const pct=calcProofPct(b);
+  const el=document.getElementById('proof-pct-'+benefId);
+  if(el) el.textContent=pct+'%';
+  const bar=document.getElementById('proof-bar-'+benefId);
+  if(bar) bar.style.width=pct+'%';
+  const color=pct===100?'var(--green)':pct>=60?'var(--gold)':'var(--red)';
+  if(el) el.style.color=color;
+}
+
+function renderProofs(){
+  const filterType=document.getElementById('filterProofType')?.value||'';
+  const filterStatut=document.getElementById('filterProofStatut')?.value||'';
+  let list=state.benefs.filter(b=>(!filterType||b.type===filterType)&&(!filterStatut||b.statut===filterStatut));
+
+  // Global KPIs
+  const allPcts=state.benefs.map(b=>calcProofPct(b));
+  const avgPct=allPcts.length?Math.round(allPcts.reduce((a,b)=>a+b,0)/allPcts.length):0;
+  const complete=allPcts.filter(p=>p===100).length;
+  const incomplete=allPcts.filter(p=>p<100).length;
+
+  const container=document.getElementById('proofsContainer');
+
+  // KPI bar
+  const kpiHtml=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+    <div class="kpi blue"><div class="kpi-label">Dossiers suivis</div><div class="kpi-val">${state.benefs.length}</div><div class="kpi-sub">${state.benefs.filter(b=>b.statut==='En cours').length} en cours</div></div>
+    <div class="kpi green"><div class="kpi-label">Dossiers complets</div><div class="kpi-val">${complete}</div><div class="kpi-sub">100% des preuves</div></div>
+    <div class="kpi ${incomplete>0?'red':'green'}"><div class="kpi-label">Dossiers incomplets</div><div class="kpi-val">${incomplete}</div><div class="kpi-sub">Preuves manquantes</div></div>
+    <div class="kpi purple"><div class="kpi-label">Complétude moyenne</div><div class="kpi-val">${avgPct}%</div><div class="kpi-sub">Objectif audit : 100%</div></div>
+  </div>`;
+
+  const cardsHtml=list.map(b=>{
+    const pct=calcProofPct(b);
+    const pctColor=pct===100?'var(--green)':pct>=60?'var(--gold)':'var(--red)';
+    const def=getPreuvesDef(b.type);
+    const preuves=b.preuves||{};
+
+    // Sections
+    const sectionsHtml=def.map(sec=>{
+      const itemsHtml=sec.items.map(item=>{
+        const val=preuves[item.key];
+        const isDone=val&&val!==false;
+        const isDate=typeof val==='string'&&val.length>0;
+        const stateClass=isDone?'checked':item.obligatoire?'missing':'';
+        const chkClass=isDone?'y':item.obligatoire?'n':'w';
+        const chkSymbol=isDone?'✓':item.obligatoire?'✗':'?';
+        return `<div class="proof-item ${stateClass}" title="${item.obligatoire?'Obligatoire':'Optionnel'}">
+          <span class="proof-chk ${chkClass}">${chkSymbol}</span>
+          <div class="proof-info">
+            <div class="proof-doc-name">${item.label}${!item.obligatoire?'<span style="color:#94A3B8;font-weight:400"> (opt.)</span>':''}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+              <span class="proof-qualiopi">${item.qualiopi}</span>
+              <span style="font-size:10px;color:var(--muted)">${item.ref}</span>
+            </div>
+            ${isDate?`<div class="proof-doc-date">📅 ${new Date(val).toLocaleDateString('fr-FR')}</div>`:''}
+          </div>
+          <div style="flex-shrink:0">
+            <input type="date" class="proof-date-input" value="${isDate?val:''}" 
+              title="Saisir la date de la preuve"
+              onchange="updateProofDate(${b.id},'${item.key}',this.value)"
+              style="display:block;margin-bottom:3px">
+            ${isDone?`<button style="font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid #FCA5A5;background:#FEF2F2;color:#991B1B;cursor:pointer;font-family:inherit" onclick="updateProofDate(${b.id},'${item.key}','')">✕ Effacer</button>`:''}
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="proof-section">
+        <div class="proof-section-title">${sec.section}</div>
+        <div class="proof-grid">${itemsHtml}</div>
+      </div>`;
+    }).join('');
+
+    // Missing items
+    const missing=def.flatMap(s=>s.items).filter(i=>i.obligatoire&&!(preuves[i.key]&&preuves[i.key]!==false));
+    const missingHtml=missing.length>0?`
+      <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:7px;padding:10px 12px;margin-top:10px">
+        <div style="font-size:11px;font-weight:700;color:#991B1B;margin-bottom:6px">⚠️ ${missing.length} preuve${missing.length>1?'s':''} obligatoire${missing.length>1?'s':''} manquante${missing.length>1?'s':''}</div>
+        ${missing.map(i=>`<div style="font-size:10px;color:#7F1D1D;display:flex;align-items:center;gap:4px;margin-bottom:2px">
+          <span style="color:#FCA5A5">●</span> ${i.label} <span style="color:#FCA5A5;font-family:monospace">(${i.ref})</span>
+        </div>`).join('')}
+      </div>`:'<div style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:7px;padding:8px 12px;margin-top:10px;font-size:11px;color:#065F46;font-weight:700">✓ Dossier complet — Toutes les preuves obligatoires sont renseignées</div>';
+
+    return `<div class="benef-proof-card" id="proof-card-${b.id}">
+      <div class="benef-proof-header" onclick="toggleProofCard(${b.id})">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="benef-proof-name">${b.nom}</span>
+            <span class="badge ${b.type==='BC'?'badge-purple':'badge-blue'}">${b.type}</span>
+            <span class="badge ${badgeStatus(b.statut)}">${b.statut}</span>
+          </div>
+          <div class="benef-proof-meta">${b.financement} · Du ${fmt(b.debut)} au ${fmt(b.fin)}</div>
+          <div class="proof-global-bar" style="width:200px;margin-top:5px">
+            <div class="proof-global-fill" id="proof-bar-${b.id}" style="width:${pct}%;background:${pctColor}"></div>
+          </div>
+        </div>
+        <div class="benef-proof-progress">
+          <div style="text-align:center">
+            <div class="proof-pct" id="proof-pct-${b.id}" style="color:${pctColor}">${pct}%</div>
+            <div style="font-size:10px;color:var(--muted)">complétude</div>
+            <div style="font-size:10px;font-weight:600;color:${pct===100?'var(--green)':pct>=60?'var(--gold)':'var(--red)'}">
+              ${pct===100?'✓ Complet':pct>=60?'⟳ En cours':'✗ Incomplet'}
+            </div>
+          </div>
+          <span style="font-size:20px;color:#94A3B8;margin-left:10px" id="proof-chev-${b.id}">▼</span>
+        </div>
+      </div>
+      <div class="benef-proof-body" id="proof-body-${b.id}">
+        ${sectionsHtml}
+        ${missingHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML=kpiHtml+cardsHtml;
+}
+
+function toggleProofCard(id){
+  const card=document.getElementById('proof-card-'+id);
+  const body=document.getElementById('proof-body-'+id);
+  const chev=document.getElementById('proof-chev-'+id);
+  const header=card.querySelector('.benef-proof-header');
+  const isOpen=body.style.display==='block';
+  body.style.display=isOpen?'none':'block';
+  header.classList.toggle('open',!isOpen);
+  if(chev) chev.textContent=isOpen?'▼':'▲';
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════
+let activeTab=0;
+const tabRenderers=[renderDashboard,renderQualiopi,renderBenefTable,renderSatisfaction,renderIncidents,renderActionsTable,renderCalendrier,renderDocuments,renderProofs];
+function switchTab(n){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  document.querySelectorAll('.tab-pane').forEach((p,i)=>p.classList.toggle('active',i===n));
+  activeTab=n;
+  tabRenderers[n]();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+// ── INIT avec Supabase ──────────────────────────────────────────────────────
+updateCountdown();
+document.querySelectorAll('input[type="date"]').forEach(el=>{if(!el.value)el.value=new Date().toISOString().slice(0,10);});
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');}));
+
+// Charger les données depuis Supabase puis afficher
+loadFromSupabase().then(()=>{
+  renderAlerts();
+  renderDashboard();
+  console.log('✓ MaïeutiCap Qualité — connecté à Supabase');
+});
+</script>
+
+<!-- Modal ouverture document -->
+<div class="modal-overlay" id="modalDocOpen">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title" style="font-size:15px">
+      📄 Ouvrir le document
+      <button class="icon-btn" onclick="closeModal('modalDocOpen')" style="font-size:18px">✕</button>
+    </div>
+    <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px">✓ Document disponible</div>
+      <div id="docOpenName" style="font-size:13px;font-weight:800;color:#232E4F;font-family:monospace;word-break:break-all"></div>
+    </div>
+    <div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:14px">
+      <strong>Pour ouvrir ce document :</strong><br>
+      <ol style="margin:8px 0 0 16px">
+        <li>Téléchargez tous les <strong>.docx</strong> depuis Claude</li>
+        <li>Placez-les dans le <strong>même dossier</strong> que votre fichier HTML</li>
+        <li>Ouvrez le HTML depuis ce dossier</li>
+        <li>Le bouton ⬇ fonctionnera directement</li>
+      </ol>
+    </div>
+    <div style="background:#FEF3C7;border-left:3px solid #D9A843;padding:8px 12px;border-radius:4px;font-size:11px;color:#92400E;margin-bottom:14px">
+      📁 Structure recommandée :<br>
+      <code style="font-size:10px">MaieutiCap_Qualité/<br>
+      ├── MaieutiCap_Pilotage_Qualite_Qualiopi.html<br>
+      ├── 00_Manuel_Qualité_MaïeutiCap_V2026.docx<br>
+      ├── 01_Procédure_Réclamations_...docx<br>
+      └── ... (tous les .docx)</code>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="copyDocName()" id="copyDocBtn">📋 Copier le nom du fichier</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalDocOpen')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
