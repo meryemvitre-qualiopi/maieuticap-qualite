@@ -346,7 +346,7 @@ body{font-family:'Montserrat','Segoe UI',system-ui,sans-serif;font-size:13px;bac
   <div class="logo-main">
     <div class="logo-name">Maïeuti<span>Cap</span></div>
     <div class="logo-tag">Révélateur de Potentiels</div>
-    <div class="logo-meta">NDA : 93061024406 &nbsp;|&nbsp; SIRET : 92121118100018 &nbsp;|&nbsp; 11 rue G. Charbonnier, 06300 Nice &nbsp;|&nbsp; Référente qualité : Meryem Vitré</div>
+    <div class="logo-meta">NDA : 93061024406 &nbsp;|&nbsp; SIRET : 92121118100018 &nbsp;|&nbsp; 11 rue G. Charbonnier, 06300 Nice &nbsp;|&nbsp; Référente qualité : Meryem VITRE</div>
   </div>
   <div class="header-badges">
     <div class="qualiopi-pill">
@@ -767,7 +767,7 @@ const QUALIOPI = [
     indicators:[
       {id:'I13',label:"Progression pédagogique mise en œuvre conformément aux engagements", preuves:"Feuilles d'émargement, FICHE SUIVI FORMATION BC", status:'conforme'},
       {id:'I14',label:"Outils et pratiques pédagogiques adaptés aux publics et objectifs", preuves:"Supports pédagogiques Soft Skills, Extraction bot BC, Outils numériques", status:'conforme'},
-      {id:'I15',label:"Formateurs mobilisés qualifiés (titres, diplômes, compétences)", preuves:"CV Meryem Vitré, Fiche de poste Responsable Pédagogique, Diplômes", status:'conforme'},
+      {id:'I15',label:"Formateurs mobilisés qualifiés (titres, diplômes, compétences)", preuves:"CV Meryem VITRE, Fiche de poste Responsable Pédagogique, Diplômes", status:'conforme'},
       {id:'I16',label:"Coordination pédagogique assurée (intervenants informés des objectifs)", preuves:"Charte sous-traitant Qualiopi, Contrat de sous-traitance, Fiche de poste", status:'conforme'},
     ]},
   { id:5, color:'#7C3AED', label:'Qualification et développement des compétences', sub:"Veilles, formation des équipes, évaluation des intervenants",
@@ -797,40 +797,11 @@ const QUALIOPI = [
     ]},
 ];
 
-const defaultBenefs = [
-  {id:1,nom:'VITRÉ Meryem',type:'BC',debut:'2025-03-18',fin:'2025-06-18',statut:'En cours',financement:'CPF',sat:null,conv:true,em:true,evalI:true,evalF:false,synth:false,
-   preuves:{entretienPrealab:'2025-03-10',contratSigne:'2025-03-18',livretRemis:'2025-03-18',riSigne:'2025-03-18',pshQuestionnaire:false,phasePrelim:'2025-03-25',phaseInvest1:'',phaseInvest2:'',phaseConclus:'',grilleEvalI:'2025-03-25',grilleEvalF:'',synthese:'',attestation:'',satChaud:'',satFroid:'',qstFroidDate:''}},
-  {id:2,nom:'MARTIN Sophie',type:'BC',debut:'2025-02-01',fin:'2025-05-01',statut:'Terminé',financement:'CPF',sat:9,conv:true,em:true,evalI:true,evalF:true,synth:true,
-   preuves:{entretienPrealab:'2025-01-20',contratSigne:'2025-02-01',livretRemis:'2025-02-01',riSigne:'2025-02-01',pshQuestionnaire:false,phasePrelim:'2025-02-10',phaseInvest1:'2025-02-24',phaseInvest2:'2025-03-10',phaseConclus:'2025-04-28',grilleEvalI:'2025-02-10',grilleEvalF:'2025-04-28',synthese:'2025-04-28',attestation:'2025-05-01',satChaud:'2025-05-01',satFroid:'',qstFroidDate:'2025-11-01'}},
-  {id:3,nom:'DUPONT Pierre',type:'Formation',debut:'2025-04-10',fin:'2025-07-10',statut:'En cours',financement:'OPCO',sat:null,conv:true,em:true,evalI:true,evalF:false,synth:false,
-   preuves:{conventionSignee:'2025-04-08',riSigne:'2025-04-10',livretRemis:'2025-04-10',evalInitiale:'2025-04-10',emargement1:'2025-04-10',emargement2:'2025-04-24',evalFormative:'',planAction:'',attestation:'',satChaud:'',satFroid:'',qstFroidDate:''}},
-  {id:4,nom:'BERNARD Claire',type:'BC',debut:'2025-01-15',fin:'2025-04-15',statut:'Terminé',financement:'Pôle emploi',sat:10,conv:true,em:true,evalI:true,evalF:true,synth:true,
-   preuves:{entretienPrealab:'2025-01-05',contratSigne:'2025-01-15',livretRemis:'2025-01-15',riSigne:'2025-01-15',pshQuestionnaire:false,phasePrelim:'2025-01-22',phaseInvest1:'2025-02-05',phaseInvest2:'2025-02-19',phaseConclus:'2025-04-10',grilleEvalI:'2025-01-22',grilleEvalF:'2025-04-10',synthese:'2025-04-10',attestation:'2025-04-15',satChaud:'2025-04-15',satFroid:'2025-10-15',qstFroidDate:'2025-10-15'}},
-  {id:5,nom:'THOMAS Jean',type:'Formation',debut:'2025-05-05',fin:'2025-08-05',statut:'En cours',financement:'OPCO',sat:null,conv:true,em:false,evalI:false,evalF:false,synth:false,
-   preuves:{conventionSignee:'2025-05-02',riSigne:'',livretRemis:'',evalInitiale:'',emargement1:'',emargement2:'',evalFormative:'',planAction:'',attestation:'',satChaud:'',satFroid:'',qstFroidDate:''}},
-  {id:6,nom:'LEROY Anne',type:'BC',debut:'2024-11-01',fin:'2025-02-01',statut:'Terminé',financement:'CPF',sat:8,conv:true,em:true,evalI:true,evalF:true,synth:true,
-   preuves:{entretienPrealab:'2024-10-20',contratSigne:'2024-11-01',livretRemis:'2024-11-01',riSigne:'2024-11-01',pshQuestionnaire:false,phasePrelim:'2024-11-08',phaseInvest1:'2024-11-22',phaseInvest2:'2024-12-06',phaseConclus:'2025-01-28',grilleEvalI:'2024-11-08',grilleEvalF:'2025-01-28',synthese:'2025-01-28',attestation:'2025-02-01',satChaud:'2025-02-01',satFroid:'',qstFroidDate:'2025-08-01'}},
-];
-const defaultSat = [
-  {id:1,date:'2025-04-20',nom:'MARTIN Sophie',type:'BC',note:9,comment:'Accompagnement très personnalisé, excellente écoute'},
-  {id:2,date:'2025-04-02',nom:'BERNARD Claire',type:'BC',note:10,comment:'Bilan très enrichissant, je me sens enfin claire sur mon avenir'},
-  {id:3,date:'2025-03-05',nom:'LEROY Anne',type:'BC',note:8,comment:'Satisfaite globalement, quelques délais de réponse à améliorer'},
-];
-const defaultReclamations = [
-  {id:1,date:'2025-03-15',emetteur:'Bénéficiaire',objet:'Délai de réponse mail supérieur à 48h',gravite:'Mineure',statut:'Clôturé',action:'Mise en place alerte mail automatique + engagement réponse sous 24h'},
-];
-const defaultIncidents = [
-  {id:1,date:'2025-02-10',type:'Technique',desc:'Problème connexion Teams pendant séance distancielle',impact:'Faible',statut:'Clôturé',action:'Reprogrammation séance à J+2, bénéficiaire informé'},
-];
-const defaultActions = [
-  {id:1,source:'Audit',date:'2025-04-09',action:"Mettre à jour le programme BC V2025 selon retours auditeur",responsable:'M. Vitré',echeance:'2025-06-30',priorite:'Haute',statut:'En cours'},
-  {id:2,source:'Satisfaction',date:'2025-03-01',action:"Envoyer questionnaire à froid 6 mois à tous les bénéficiaires 2024",responsable:'M. Vitré',echeance:'2025-07-31',priorite:'Haute',statut:'En cours'},
-  {id:3,source:'Veille',date:'2025-02-15',action:"Compléter tableau veille accessibilité 2025 et abonnements newsletters",responsable:'M. Vitré',echeance:'2025-06-30',priorite:'Normale',statut:'En cours'},
-  {id:4,source:'Interne',date:'2025-01-10',action:"Finaliser plan de développement des compétences 2025-2026",responsable:'M. Vitré',echeance:'2025-07-01',priorite:'Normale',statut:'En cours'},
-  {id:5,source:'Auto-évaluation',date:'2025-04-09',action:"Mettre en place revues qualité trimestrielles formalisées avec compte-rendu",responsable:'M. Vitré',echeance:'2025-06-01',priorite:'Haute',statut:'Ouvert'},
-  {id:6,source:'Interne',date:'2025-03-20',action:"Compléter les partenariats socio-économiques (conventions partenaires PACA)",responsable:'M. Vitré',echeance:'2025-09-30',priorite:'Normale',statut:'Ouvert'},
-  {id:7,source:'Veille',date:'2025-01-15',action:"Mettre à jour veille accessibilité formation V2025",responsable:'M. Vitré',echeance:'2025-04-30',priorite:'Normale',statut:'Clôturé'},
-];
+const defaultBenefs = [];
+const defaultSat = [];
+const defaultReclamations = [];
+const defaultIncidents = [];
+const defaultActions = [];
 
 // ═══════════════════════════════════════════════════════════
 //  STATE MANAGEMENT
