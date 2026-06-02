@@ -877,11 +877,11 @@ async function loadFromSupabase(){
   }catch(e){
     console.error('Supabase load error:',e);
     // Fallback to defaults
-    state.benefs=[...defaultBenefs];
-    state.sat=[...defaultSat];
-    state.reclamations=[...defaultReclamations];
-    state.incidents=[...defaultIncidents];
-    state.actions=[...defaultActions];
+    state.benefs=[];
+state.sat=[];
+state.reclamations=[];
+state.incidents=[];
+state.actions=[];
     state.loaded=true;
   }
   showLoading(false);
