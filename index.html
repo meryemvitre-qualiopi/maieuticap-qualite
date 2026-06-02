@@ -861,11 +861,11 @@ async function loadFromSupabase(){
       fetch(`${SUPABASE_URL}/rest/v1/actions?select=*&order=id.asc`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
       fetch(`${SUPABASE_URL}/rest/v1/qualiopi_statuts?select=*`,{headers:_hdrs}).then(x=>x.json()).then(d=>({data:d,error:null})).catch(e=>({data:[],error:e})),
     ]);
-    state.benefs = (b.data||[]).map(mapBenef);
-    state.sat = s.data||[];
-    state.reclamations = r.data||[];
-    state.incidents = i.data||[];
-    state.actions = a.data||[];
+state.benefs = (b.data||[]).map(mapBenef);
+state.sat = s.data||[];
+state.reclamations = r.data||[];
+state.incidents = i.data||[];
+state.actions = a.data||[];
     // Apply saved Qualiopi statuses
     (q.data||[]).forEach(qs=>{
       for(const c of state.qualiopi){
