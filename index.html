@@ -1390,6 +1390,8 @@ function renderDocuments(){
             <th>Indicateurs Qualiopi</th>
             <th>Conformité</th>
             <th>Charte</th>
+            <th>Dernière modif.</th>
+            <th>Statut</th>
             <th>Télécharger</th>
           </tr></thead>
           <tbody>${cat.docs.map((d,i)=>`
@@ -1401,7 +1403,9 @@ function renderDocuments(){
               <td>${d.qualiopi.split(',').map(q=>`<span class="qualiopi-tag">${q.trim()}</span>`).join(' ')}</td>
               <td><span class="badge ${d.status==='conforme'?'badge-ok':d.status==='en_cours'?'badge-warn':'badge-red'}">${d.status==='conforme'?'✓ Conforme':d.status==='en_cours'?'⟳ En cours':'✗ À traiter'}</span></td>
               <td>${d.branded?'<span class="doc-branded">⭐ V2026</span>':'<span style="color:#CBD5E0;font-size:10px">—</span>'}</td>
-              <td>${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}</td>
+              <td id="doc-date-${d.ref}" style="font-size:10px;color:var(--muted);white-space:nowrap">—</td>
+              <td id="doc-statut-${d.ref}"><span class="badge badge-warn" style="font-size:9px">À corriger</span></td>
+              <td style="white-space:nowrap">${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button> <button class="doc-dl-btn" style="background:var(--green);margin-left:4px" onclick="markDocUpdated('${d.ref}','${d.file}','${d.ver}')">✓ Corrigé</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1409,6 +1413,9 @@ function renderDocuments(){
     </div>`).join('')}
   `;
 }
+
+// Load dates from Supabase after rendering
+  setTimeout(loadDocDates, 100);
 
 function toggleCatDoc(el){
   const body=el.nextElementSibling;
@@ -1453,11 +1460,44 @@ const DRIVE_IDS = {
 function dlDoc(filename){
   const id = DRIVE_IDS[filename];
   if(id){
-    // Ouvre le fichier dans Drive pour téléchargement fiable
     window.open('https://drive.google.com/file/d/'+id+'/view?usp=sharing', '_blank');
   } else {
     alert('Document non trouvé : ' + filename);
   }
+}
+
+// ── SUIVI DOCUMENTS ─────────────────────────────────────────
+async function loadDocDates(){
+  const {data} = await db.from('documents_suivi').select('*').order('derniere_modif', {ascending:false});
+  if(!data || !Array.isArray(data)) return;
+  data.forEach(doc => {
+    const dateEl = document.getElementById('doc-date-' + doc.file_name.replace(/[^a-zA-Z0-9]/g,'-'));
+    const statutEl = document.getElementById('doc-statut-' + doc.file_name.replace(/[^a-zA-Z0-9]/g,'-'));
+    // Try to find by ref
+    const allDateEls = document.querySelectorAll('[id^="doc-date-"]');
+    allDateEls.forEach(el => {
+      if(el.id.includes(doc.file_name.substring(0,8).replace(/[^a-zA-Z0-9]/g,'-'))) {
+        if(doc.derniere_modif) {
+          el.textContent = new Date(doc.derniere_modif).toLocaleDateString('fr-FR');
+          el.style.color = 'var(--green)';
+          el.style.fontWeight = '700';
+        }
+      }
+    });
+  });
+}
+
+async function markDocUpdated(ref, filename, version){
+  const now = new Date().toISOString();
+  await db.from('documents_suivi').upsert({
+    file_name: ref,
+    drive_id: DRIVE_IDS[filename] || '',
+    derniere_modif: now,
+    version: version || 'V2026',
+    statut: 'Corrigé'
+  }, {onConflict: 'file_name'});
+  renderDocuments();
+  loadDocDates();
 }
 
 function copyDocName(){
@@ -1723,6 +1763,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 loadFromSupabase().then(()=>{
   renderAlerts();
   renderDashboard();
+  loadDocDates();
   console.log('✓ MaïeutiCap Qualité — connecté à Supabase');
 });
 </script>
