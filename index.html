@@ -56,7 +56,11 @@ const db = {
     upsert: (data, opts={}) => fetch(
       `${SUPABASE_URL}/rest/v1/${table}${opts.onConflict?'?on_conflict='+opts.onConflict:''}`,
       {method:'POST',headers:{..._hdrs,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(data)}
-    ).then(r=>r.json()).then(d=>{return{data:d,error:null}}).catch(error=>{return{data:null,error}})
+    ).then(async r=>{
+      const d = await r.json().catch(()=>null);
+      if(!r.ok){ return {data:null, error:(d||{status:r.status,message:'Erreur HTTP '+r.status})}; }
+      return {data:d, error:null};
+    }).catch(error=>{return{data:null,error}})
   })
 };
 console.log('✓ MaïeutiCap — Supabase REST API connecté');
@@ -1470,35 +1474,37 @@ function dlDoc(filename){
 
 // ── SUIVI DOCUMENTS ─────────────────────────────────────────
 async function loadDocDates(){
-  const {data} = await db.from('documents_suivi').select('*').order('derniere_modif', {ascending:false});
+  const {data, error} = await db.from('documents_suivi').select('*').order('derniere_modif', {ascending:false});
+  if(error){ console.error('Erreur chargement documents_suivi:', error); return; }
   if(!data || !Array.isArray(data)) return;
   data.forEach(doc => {
-    const dateEl = document.getElementById('doc-date-' + doc.file_name.replace(/[^a-zA-Z0-9]/g,'-'));
-    const statutEl = document.getElementById('doc-statut-' + doc.file_name.replace(/[^a-zA-Z0-9]/g,'-'));
-    // Try to find by ref
-    const allDateEls = document.querySelectorAll('[id^="doc-date-"]');
-    allDateEls.forEach(el => {
-      if(el.id.includes(doc.file_name.substring(0,8).replace(/[^a-zA-Z0-9]/g,'-'))) {
-        if(doc.derniere_modif) {
-          el.textContent = new Date(doc.derniere_modif).toLocaleDateString('fr-FR');
-          el.style.color = 'var(--green)';
-          el.style.fontWeight = '700';
-        }
-      }
-    });
+    const dateEl = document.getElementById('doc-date-' + doc.file_name);
+    const statutEl = document.getElementById('doc-statut-' + doc.file_name);
+    if(dateEl && doc.derniere_modif){
+      dateEl.textContent = new Date(doc.derniere_modif).toLocaleDateString('fr-FR');
+      dateEl.style.color = 'var(--green)';
+      dateEl.style.fontWeight = '700';
+    }
+    if(statutEl && doc.statut === 'Corrigé'){
+      statutEl.innerHTML = '<span class="badge badge-ok" style="font-size:9px">✓ Corrigé</span>';
+    }
   });
 }
 
 async function markDocUpdated(ref, filename, version){
   const now = new Date().toISOString();
-  await db.from('documents_suivi').upsert({
+  const {data, error} = await db.from('documents_suivi').upsert({
     file_name: ref,
     drive_id: DRIVE_IDS[filename] || '',
     derniere_modif: now,
     version: version || 'V2026',
     statut: 'Corrigé'
   }, {onConflict: 'file_name'});
-  renderDocuments();
+  if(error){
+    alert('Erreur lors de l\'enregistrement : ' + (error.message || JSON.stringify(error)));
+    console.error('markDocUpdated error:', error);
+    return;
+  }
   loadDocDates();
 }
 
