@@ -1346,7 +1346,7 @@ function renderDocuments(){
     {cat:'🔍 Veille & Développement des compétences',catColor:'#0F766E',icon:'⭐',name:'Grille évaluation du formateur (auto-éval.)',ref:'EVAL-FORM-01',ver:'V2026',qualiopi:'I19,I28',status:'conforme',branded:true,file:'07_Évaluation_Formateur.docx'},
     // ── ♿ HANDICAP & ACCESSIBILITÉ ─────────────────────────────────────────
     {cat:'♿ Handicap & Accessibilité (PSH)',catColor:'#D97706',icon:'♿',name:'Adaptations handicap & accessibilité PSH',ref:'ADAPT-PSH-01',ver:'V2026',qualiopi:'I12,I23,I25',status:'conforme',branded:true,file:'30_Adaptations_Handicap_PSH_V2026.docx'},
-    {cat:'♿ Handicap & Accessibilité (PSH)',catColor:'#D97706',icon:'📝',name:'Questionnaire PSH (bénéficiaire)',ref:'QUEST-PSH',ver:'V2026',qualiopi:'I12,I23',status:'conforme',branded:true,file:'26_Questionnaire_PSH_Beneficiaire_V2026.docx'},
+    {cat:'♿ Handicap & Accessibilité (PSH)',catColor:'#D97706',icon:'📝',name:'Questionnaire PSH (bénéficiaire)',ref:'QUEST-PSH',ver:'V2026',qualiopi:'I12,I23',status:'conforme',branded:true,file:'26_Questionnaire_PSH_Beneficiaire_V2026.docx',form:'https://forms.gle/xZg4Z7eV9ZMUQAj57'},
     // ── 🤝 COMMANDITAIRES & PARTENARIATS ─────────────────────────────────────────
     {cat:'🤝 Commanditaires & Partenariats',catColor:'#7C3AED',icon:'📊',name:'Analyse des besoins commanditaire',ref:'ANAL-BES-CMD-01',ver:'V2026',qualiopi:'I7',status:'conforme',branded:true,file:'27_Analyse_Besoins_Commanditaire_V2026.docx'},
     // ── 👤 RESSOURCES HUMAINES ────────────────────────────────────────────────
@@ -1411,7 +1411,7 @@ function renderDocuments(){
               <td>${d.branded?'<span class="doc-branded">⭐ V2026</span>':'<span style="color:#CBD5E0;font-size:10px">—</span>'}</td>
               <td id="doc-date-${d.ref}" style="font-size:10px;color:var(--muted);white-space:nowrap">—</td>
               <td id="doc-statut-${d.ref}"><span class="badge badge-warn" style="font-size:9px">À corriger</span></td>
-              <td style="white-space:nowrap">${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button> <button class="doc-dl-btn" style="background:var(--green);margin-left:4px" onclick="markDocUpdated('${d.ref}','${d.file}','${d.ver}')">✓ Corrigé</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}</td>
+              <td style="white-space:nowrap">${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button> <button class="doc-dl-btn" style="background:var(--green);margin-left:4px" onclick="markDocUpdated('${d.ref}','${d.file}','${d.ver}')">✓ Corrigé</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}${d.form?` <button class="doc-dl-btn" style="background:#7C3AED;margin-left:4px" onclick="window.open('${d.form}','_blank')">📋 Formulaire</button>`:''}</td>
             </tr>`).join('')}
           </tbody>
         </table>
