@@ -570,7 +570,7 @@ body{font-family:'Montserrat','Segoe UI',system-ui,sans-serif;font-size:13px;bac
   </div>
   <div class="card">
     <div class="card-head"><span class="card-head-title">📋 Checklist revue qualité trimestrielle</span></div>
-    <div class="card-body" id="checklistRevue" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    <div class="card-body" id="checklistRevue" style="display:grid;grid-template-columns:1fr;gap:0"></div>
   </div>
 </div>
 
@@ -1254,21 +1254,24 @@ async function deleteAction(id){if(confirm('Supprimer cette action ?')){await db
 function renderCalendrier(){
   const revues=[
     {date:'2025-03-31',title:'Revue qualité T1 2025',desc:'Analyse satisfaction, bilan formation',type:'done'},
-    {date:'2025-06-30',title:'Revue qualité T2 2025',desc:'Réclamations, veille, indicateurs',type:'next'},
-    {date:'2025-09-30',title:'Revue qualité T3 2025',desc:'Bilan semestriel, plan actions',type:'future'},
-    {date:'2025-12-31',title:'Revue qualité T4 2025 + Bilan annuel',desc:'Rapport annuel qualité Qualiopi',type:'future'},
-    {date:'2026-03-31',title:'Revue qualité T1 2026',desc:'Préparation dossier audit',type:'future'},
-    {date:'2026-06-30',title:'Revue qualité T2 2026',desc:'Bilan semestriel pré-audit',type:'future'},
-    {date:'2026-09-30',title:'Revue qualité T3 2026',desc:'Finalisation dossier audit',type:'future'},
-    {date:'2026-12-31',title:'Revue qualité T4 2026 + Simulation audit',desc:'Audit blanc interne',type:'future'},
+    {date:'2025-06-30',title:'Revue qualité T2 2025',desc:'Réclamations, veille, indicateurs',type:'done'},
+    {date:'2025-09-30',title:'Revue qualité T3 2025',desc:'Bilan semestriel, plan actions',type:'done'},
+    {date:'2025-12-31',title:'Revue qualité T4 2025 + Bilan annuel',desc:'Rapport annuel qualité Qualiopi',type:'done'},
+    {date:'2026-03-31',title:'Revue qualité T1 2026',desc:'Préparation dossier audit',type:'done'},
+    {date:'2026-06-30',title:'Revue qualité T2 2026',desc:'Bilan semestriel pré-audit',type:'done'},
+    {date:'2026-09-30',title:'Revue qualité T3 2026',desc:'Finalisation dossier audit',type:'done'},
+    {date:'2026-12-31',title:'🔜 Revue qualité T4 2026 + Simulation audit',desc:'Audit blanc interne — préparation dossier complet',type:'next'},
+    {date:'2027-01-15',title:'🏁 Audit de surveillance Qualiopi',desc:'Passage audit — Renouvellement certification',type:'future'},
   ];
   const jalons=[
     {date:'2025-04-09',title:'✅ Certification Qualiopi obtenue',desc:'BC + Actions de formation — Organisme : Bureau Veritas',type:'done'},
-    {date:'2025-06-30',title:'Mise à jour programme BC V2025',desc:'Intégration retours auditeur',type:'next'},
-    {date:'2025-09-30',title:'Publication des indicateurs de résultats',desc:'Taux satisfaction, taux abandon — diffusion partenaires',type:'future'},
-    {date:'2025-12-31',title:'Rapport annuel qualité 2025',desc:'Synthèse indicateurs, satisfaction, améliorations',type:'future'},
-    {date:'2026-06-30',title:'Dossier préparation audit',desc:'Constitution preuves, mise à jour documents',type:'future'},
-    {date:'2026-10-01',title:'Auto-évaluation pré-audit',desc:'Grille auto-évaluation Qualiopi 32 indicateurs',type:'future'},
+    {date:'2025-06-30',title:'✅ Mise à jour programme BC V2026',desc:'Intégration retours auditeur, nouveaux outils',type:'done'},
+    {date:'2025-09-30',title:'✅ Publication des indicateurs de résultats',desc:'Taux satisfaction, taux abandon — diffusion partenaires',type:'done'},
+    {date:'2025-12-31',title:'✅ Rapport annuel qualité 2025',desc:'Synthèse indicateurs, satisfaction, améliorations',type:'done'},
+    {date:'2026-06-30',title:'✅ Dossier préparation audit',desc:'Constitution preuves, mise à jour documents',type:'done'},
+    {date:'2026-10-01',title:'✅ Auto-évaluation pré-audit',desc:'Grille auto-évaluation Qualiopi 32 indicateurs complétée',type:'done'},
+    {date:'2026-11-12',title:'✅ Harmonisation documentaire V2026',desc:'PSH, attestations, Drive organisé — outil qualité mis à jour',type:'done'},
+    {date:'2026-12-31',title:'🔜 Audit blanc interne (simulation)',desc:'Test complet dossier — 32 indicateurs vérifiés',type:'next'},
     {date:'2027-01-15',title:'🏁 Audit de surveillance Qualiopi',desc:'Renouvellement certification — Janvier 2027',type:'future'},
   ];
   document.getElementById('revuesTimeline').innerHTML=revues.map(e=>`<div class="tl">
@@ -1279,18 +1282,99 @@ function renderCalendrier(){
     <div class="tl-dot ${e.type}">${e.type==='done'?'✓':e.type==='next'?'!':'○'}</div>
     <div class="tl-body"><div class="tl-date">${fmt(e.date)}</div><div class="tl-title">${e.title}</div><div class="tl-desc">${e.desc}</div></div>
   </div>`).join('');
-  const checklist=[
-    '📋 Analyser les questionnaires de satisfaction reçus','📊 Calculer les indicateurs (taux satisfaction, abandon, insertion)',
-    '⚠️ Examiner les réclamations et incidents du trimestre','🔧 Évaluer l\'efficacité des actions correctives en cours',
-    '📰 Intégrer les résultats de la veille légale et pédagogique','📁 Mettre à jour le tableau des actions d\'amélioration',
-    '✅ Vérifier la conformité des dossiers bénéficiaires','📅 Programmer la prochaine revue qualité (Google Calendar)',
-    '📝 Rédiger le compte-rendu de la revue','📨 Envoyer questionnaires en attente (satisfaction, à froid)',
+  const checklistGroups=[
+    {
+      title:'📊 Indicateurs & résultats',
+      color:'#18478D',
+      items:[
+        'Calculer le taux de satisfaction bénéficiaires (objectif ≥ 85 %)',
+        'Calculer le taux de satisfaction commanditaires / financeurs',
+        'Calculer le taux d\'abandon et analyser les causes',
+        'Calculer le taux d\'insertion / repositionnement (M+6)',
+        'Mettre à jour les KPI dans l\'outil de pilotage',
+      ]
+    },
+    {
+      title:'📋 Satisfaction & réclamations',
+      color:'#D9A843',
+      items:[
+        'Analyser tous les questionnaires de satisfaction reçus (chaud + froid)',
+        'Envoyer les questionnaires en attente (M+6 sortants)',
+        'Examiner les réclamations et incidents du trimestre',
+        'Vérifier la clôture des réclamations ouvertes',
+        'Mettre à jour le registre incidents / aléas',
+      ]
+    },
+    {
+      title:'📁 Dossiers & conformité',
+      color:'#515276',
+      items:[
+        'Vérifier la complétude des dossiers bénéficiaires (preuves I9–I13)',
+        'Contrôler la présence des signatures (émargements, contrats)',
+        'Vérifier la validité des documents contractuels (contrats, conventions)',
+        'Contrôler les adaptations PSH documentées (I12)',
+        'Archiver les attestations de réalisation délivrées (I11)',
+      ]
+    },
+    {
+      title:'🔧 Actions correctives & amélioration',
+      color:'#232E4F',
+      items:[
+        'Évaluer l\'efficacité des actions correctives en cours',
+        'Mettre à jour le tableau des actions d\'amélioration (I31)',
+        'Identifier les nouveaux axes d\'amélioration',
+        'Intégrer les résultats de la veille légale et pédagogique (I32)',
+        'Mettre à jour les documents si évolution réglementaire',
+      ]
+    },
+    {
+      title:'📅 Clôture de la revue',
+      color:'#799BA5',
+      items:[
+        'Rédiger le compte-rendu de la revue qualité',
+        'Valider la conformité des 32 indicateurs Qualiopi',
+        'Programmer la prochaine revue qualité (Google Calendar)',
+        'Mettre à jour la date de révision sur chaque document modifié',
+        'Archiver le compte-rendu et preuves dans le Drive Critère 7',
+      ]
+    },
   ];
-  document.getElementById('checklistRevue').innerHTML=checklist.map((item,i)=>`
-    <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px;border-radius:6px;border:0.5px solid var(--border);background:white">
-      <input type="checkbox" id="chk${i}" style="margin-top:2px;accent-color:var(--gold)">
-      <span style="font-size:12px;color:var(--text)">${item}</span>
-    </label>`).join('');
+  const storageKey='checklistRevue_' + new Date().toISOString().slice(0,7);
+  let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch(e){}
+  let allIdx=0;
+  document.getElementById('checklistRevue').innerHTML=`
+    <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:11px;color:var(--muted)">Checklist revue qualité trimestrielle — cochez au fur et à mesure</span>
+      <button onclick="clearChecklist()" class="btn btn-ghost btn-sm">Réinitialiser</button>
+    </div>
+    ${checklistGroups.map(g=>`
+      <div style="grid-column:1/-1;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:800;color:white;background:${g.color};padding:6px 12px;border-radius:6px 6px 0 0;letter-spacing:0.4px">${g.title}</div>
+        <div style="border:0.5px solid #E2E8F0;border-top:none;border-radius:0 0 6px 6px;overflow:hidden">
+          ${g.items.map((item,j)=>{
+            const idx=allIdx++;
+            const checked=saved[idx]?'checked':'';
+            return `<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.04);background:${checked?'#F0FDF4':'white'}" id="chklabel${idx}">
+              <input type="checkbox" id="chk${idx}" ${checked} onchange="saveChk(${idx})" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0">
+              <span style="font-size:12px;color:var(--text);${checked?'text-decoration:line-through;color:#9CA3AF':''}" id="chkspan${idx}">${item}</span>
+            </label>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}`;
+
+  window.saveChk=function(idx){
+    const cb=document.getElementById('chk'+idx);
+    const lbl=document.getElementById('chklabel'+idx);
+    const sp=document.getElementById('chkspan'+idx);
+    saved[idx]=cb.checked;
+    if(cb.checked){lbl.style.background='#F0FDF4';sp.style.textDecoration='line-through';sp.style.color='#9CA3AF';}
+    else{lbl.style.background='white';sp.style.textDecoration='';sp.style.color='var(--text)';}
+    try{localStorage.setItem(storageKey,JSON.stringify(saved))}catch(e){}
+  };
+  window.clearChecklist=function(){
+    saved={};try{localStorage.removeItem(storageKey)}catch(e){}
+    renderCalendrier();
+  };
 }
 
 // ═══════════════════════════════════════════════════════════
