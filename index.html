@@ -1495,8 +1495,8 @@ function renderDocuments(){
               <td><span class="badge ${d.status==='conforme'?'badge-ok':d.status==='en_cours'?'badge-warn':'badge-red'}">${d.status==='conforme'?'✓ Conforme':d.status==='en_cours'?'⟳ En cours':'✗ À traiter'}</span></td>
               <td>${d.branded?'<span class="doc-branded">⭐ V2026</span>':'<span style="color:#CBD5E0;font-size:10px">—</span>'}</td>
               <td id="doc-date-${d.ref}" style="font-size:10px;color:var(--muted);white-space:nowrap">—</td>
-              <td id="doc-statut-${d.ref}"><span class="badge badge-warn" style="font-size:9px">À corriger</span></td>
-              <td style="white-space:nowrap">${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button> <button class="doc-dl-btn" style="background:var(--green);margin-left:4px" onclick="markDocUpdated('${d.ref}','${d.file}','${d.ver}')">✓ Corrigé</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}${d.form?` <button class="doc-dl-btn" style="background:#7C3AED;margin-left:4px" onclick="window.open('${d.form}','_blank')">📋 Formulaire</button>`:''}</td>
+              <td id="doc-statut-${d.ref}"><span class="badge ${d.status==='conforme'?'badge-ok':'badge-warn'}" style="font-size:9px">${d.status==='conforme'?'✓ Conforme':'⟳ En cours'}</span></td>
+              <td style="white-space:nowrap">${d.file?`<button class="doc-dl-btn" onclick="dlDoc('${d.file}')">⬇ .docx</button> <button class="doc-dl-btn" style="background:var(--green);margin-left:4px" onclick="markDocUpdated('${d.ref}','${d.file}','${d.ver}')">📅 Dater</button>`:'<span class="doc-dl-btn disabled">Existant</span>'}${d.form?` <button class="doc-dl-btn" style="background:#7C3AED;margin-left:4px" onclick="window.open('${d.form}','_blank')">📋 Formulaire</button>`:''}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1506,6 +1506,12 @@ function renderDocuments(){
 }
 
 // Load dates from Supabase after rendering
+  // Chargement immédiat depuis cache localStorage (synchrone)
+  try {
+    const cache = JSON.parse(localStorage.getItem('doc_dates_cache') || '{}');
+    Object.entries(cache).forEach(([ref, row]) => applyDocRow(ref, row.derniere_modif, row.statut));
+  } catch(e){}
+  // Mise à jour depuis Supabase en arrière-plan
   setTimeout(loadDocDates, 100);
 
 function toggleCatDoc(el){
@@ -1564,14 +1570,10 @@ function dlDoc(filename){
 // ── SUIVI DOCUMENTS ─────────────────────────────────────────
 function applyDocRow(ref, derniere_modif, statut){
   const dateEl = document.getElementById('doc-date-' + ref);
-  const statutEl = document.getElementById('doc-statut-' + ref);
   if(dateEl && derniere_modif){
     dateEl.textContent = new Date(derniere_modif).toLocaleDateString('fr-FR');
     dateEl.style.color = 'var(--green)';
     dateEl.style.fontWeight = '700';
-  }
-  if(statutEl && statut === 'Corrigé'){
-    statutEl.innerHTML = '<span class="badge badge-ok" style="font-size:9px">✓ Corrigé</span>';
   }
 }
 
@@ -1610,12 +1612,13 @@ async function markDocUpdated(ref, filename, version){
     console.error('markDocUpdated error:', error);
     return;
   }
-  // Mise à jour immédiate du cache localStorage
+  // Mise à jour immédiate du cache localStorage + affichage
   try {
     const cache = JSON.parse(localStorage.getItem('doc_dates_cache') || '{}');
     cache[ref] = {derniere_modif: now, statut: 'Corrigé'};
     localStorage.setItem('doc_dates_cache', JSON.stringify(cache));
   } catch(e){}
+  applyDocRow(ref, now, 'Corrigé');
   loadDocDates();
 }
 
