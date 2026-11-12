@@ -1503,16 +1503,15 @@ function renderDocuments(){
       </div>
     </div>`).join('')}
   `;
-}
 
-// Load dates from Supabase after rendering
-  // Chargement immédiat depuis cache localStorage (synchrone)
+  // Chargement immédiat depuis cache localStorage (synchrone, DOM maintenant disponible)
   try {
     const cache = JSON.parse(localStorage.getItem('doc_dates_cache') || '{}');
     Object.entries(cache).forEach(([ref, row]) => applyDocRow(ref, row.derniere_modif, row.statut));
   } catch(e){}
   // Mise à jour depuis Supabase en arrière-plan
   setTimeout(loadDocDates, 100);
+}
 
 function toggleCatDoc(el){
   const body=el.nextElementSibling;
