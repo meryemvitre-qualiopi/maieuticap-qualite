@@ -1562,22 +1562,38 @@ function dlDoc(filename){
 }
 
 // ── SUIVI DOCUMENTS ─────────────────────────────────────────
+function applyDocRow(ref, derniere_modif, statut){
+  const dateEl = document.getElementById('doc-date-' + ref);
+  const statutEl = document.getElementById('doc-statut-' + ref);
+  if(dateEl && derniere_modif){
+    dateEl.textContent = new Date(derniere_modif).toLocaleDateString('fr-FR');
+    dateEl.style.color = 'var(--green)';
+    dateEl.style.fontWeight = '700';
+  }
+  if(statutEl && statut === 'Corrigé'){
+    statutEl.innerHTML = '<span class="badge badge-ok" style="font-size:9px">✓ Corrigé</span>';
+  }
+}
+
 async function loadDocDates(){
+  // 1. Affichage immédiat depuis localStorage (cache local)
+  try {
+    const cache = JSON.parse(localStorage.getItem('doc_dates_cache') || '{}');
+    Object.entries(cache).forEach(([ref, row]) => applyDocRow(ref, row.derniere_modif, row.statut));
+  } catch(e){}
+
+  // 2. Mise à jour depuis Supabase en arrière-plan
   const {data, error} = await db.from('documents_suivi').select('*').order('derniere_modif', {ascending:false});
   if(error){ console.error('Erreur chargement documents_suivi:', error); return; }
   if(!data || !Array.isArray(data)) return;
-  data.forEach(doc => {
-    const dateEl = document.getElementById('doc-date-' + doc.file_name);
-    const statutEl = document.getElementById('doc-statut-' + doc.file_name);
-    if(dateEl && doc.derniere_modif){
-      dateEl.textContent = new Date(doc.derniere_modif).toLocaleDateString('fr-FR');
-      dateEl.style.color = 'var(--green)';
-      dateEl.style.fontWeight = '700';
-    }
-    if(statutEl && doc.statut === 'Corrigé'){
-      statutEl.innerHTML = '<span class="badge badge-ok" style="font-size:9px">✓ Corrigé</span>';
-    }
-  });
+  try {
+    const cache = {};
+    data.forEach(doc => {
+      cache[doc.file_name] = {derniere_modif: doc.derniere_modif, statut: doc.statut};
+      applyDocRow(doc.file_name, doc.derniere_modif, doc.statut);
+    });
+    localStorage.setItem('doc_dates_cache', JSON.stringify(cache));
+  } catch(e){}
 }
 
 async function markDocUpdated(ref, filename, version){
@@ -1594,6 +1610,12 @@ async function markDocUpdated(ref, filename, version){
     console.error('markDocUpdated error:', error);
     return;
   }
+  // Mise à jour immédiate du cache localStorage
+  try {
+    const cache = JSON.parse(localStorage.getItem('doc_dates_cache') || '{}');
+    cache[ref] = {derniere_modif: now, statut: 'Corrigé'};
+    localStorage.setItem('doc_dates_cache', JSON.stringify(cache));
+  } catch(e){}
   loadDocDates();
 }
 
